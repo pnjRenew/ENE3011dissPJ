@@ -153,6 +153,9 @@ runtime_duration = finish_dateTime - start_dateTime
 
 print("Runtime duration: ", str(runtime_duration))
 
+tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
+print("Time history - Wall tension: ",str(tension_history))
+
 
 print("Finished")
 
