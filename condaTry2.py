@@ -135,9 +135,9 @@ shear_force = array_cable.RangeGraph("Shear force")
 
 print("Shear force: ",str(shear_force))
 
-#zz_stress = array_cable.RangeGraph("ZZ stress")
+worst_zz_stress = array_cable.RangeGraph("Worst ZZ stress")
 
-#print("ZZ stress: ",str(zz_stress))
+print("ZZ stress: ",str(worst_zz_stress))
 
 
     
