@@ -159,6 +159,7 @@ print("Time history - Wall tension: ",str(tension_history))
 bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
 print("Bend moment history - Wall tension: ",str(bend_moment_history))
 
+# print all elements using list comprehension: [print (i) for i in bend_moment_history]
 
 print("Finished")
 
