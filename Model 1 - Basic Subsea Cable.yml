@@ -1,0 +1,349 @@
+﻿%YAML 1.1
+# Type: Model
+# Program: OrcaFlex 11.2d
+# File: \\tremictssan.fal.ac.uk\userdata-uec\bw477\My Documents\ORCAFLEX\Model 1 - Basic Subsea Cable\Model 1 - Basic Subsea Cable.yml
+# Created: 15:43 on 27/02/2023
+# User: bw477
+# Machine: 0093030DS-60013
+---
+General:
+  # Units
+  UnitsSystem: User
+  LengthUnits: m
+  MassUnits: kg
+  ForceUnits: kN
+  g: 9.80665
+  TemperatureUnits: °C
+  # Statics
+  BuoysIncludedInStatics: Individually specified
+  LineStaticsStep1Policy: All lines included
+  LineStaticsStep2Policy: Solve coupled systems
+  WholeSystemStaticsEnabled: Yes
+  # Dynamics
+  DynamicsSolutionMethod: Implicit time domain
+  ImplicitUseVariableTimeStep: No
+  ImplicitConstantTimeStep: 0.1
+  LogPrecision: Single
+  TargetLogSampleInterval: 0.1
+  LogStartTime: ~
+  # Stages
+  StartTime: ~
+  FirstStage: ~
+  RampStartTime: ~
+  RampFinishTime: ~
+  StageDuration:
+    - 8
+    - 16
+Environment:
+  # Sea
+  WaterSurfaceZ: 0
+  KinematicViscosity: 1.35e-6
+  SeaTemperature: 10
+  ReynoldsNumberCalculation: Flow direction
+  # Sea density
+  HorizontalWaterDensityFactor: ~
+  VerticalDensityVariation: Constant
+  Density: 1024.9999999999998
+  # Seabed
+  SeabedType: Profile
+  SeabedOrigin: [0, 0]
+  SeabedSlopeDirection: 0
+  SeabedProfileInterpolation: Linear
+  SeabedProfileDistanceFromSeabedOrigin, SeabedProfileZ:
+    - [0, -30]
+    - [50, -30]
+    - [60, -32]
+    - [80, -32]
+  SeabedModel: Elastic
+  SeabedNormalStiffness: 100
+  SeabedShearStiffness: 100
+  # Waves
+  SimulationTimeOrigin: 0
+  WaveTrains:
+    - Name: Wave1
+      WaveType: Dean stream
+      WaveDirection: 90
+      WaveHeight: 18
+      WavePeriod: 15
+      WaveOrigin: [0, 0]
+      WaveTimeOrigin: 0
+      WaveStreamFunctionOrder: 5
+  # Wave calculation
+  WaveKinematicsCutoffDepth: Infinity
+  WaveCalculationMethod: Instantaneous position (exact)
+  WaveCalculationTimeInterval: 0
+  WaveCalculationSpatialInterval: 0
+  # Current
+  MultipleCurrentDataCanBeDefined: No
+  CurrentRamped: Yes
+  HorizontalCurrentFactor: ~
+  CurrentMethod: Power law
+  CurrentSpeedAtSurface: 1.6
+  CurrentSpeedAtSeabed: 0
+  RefCurrentDirection: 90
+  CurrentExponent: 7
+  # Wind
+  IncludeVesselWindLoads: Yes
+  IncludeLineWindLoads: Yes
+  IncludeBuoyWindLoads: Yes
+  IncludeBuoyWingWindLoads: Yes
+  WindType: Constant
+  AirDensity: 1.28
+  VerticalWindVariationFactor: ~
+  WindSpeed: 0
+  WindDirection: 0
+LineTypes:
+  - Name: Cable
+    Category: General
+    # Geometry and mass
+    OD: 0.1484
+    ID: 0
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 37.1
+    # Limits
+    CompressionIsLimited: No
+    AllowableTension: 60
+    MinRadius: [~, ~]
+    # Structure
+    EI: [15.5, ~]
+    EA: 384e3
+    PoissonRatio: 0.5
+    GJ: 4.4
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.6
+    SeabedAxialFrictionCoefficient: 0.6
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+  - Name: Burial Tube
+    Category: General
+    # Geometry and mass
+    OD: 0.9
+    ID: 0.7
+    CentreOfMass: [0, 0]
+    BulkModulus: Infinity
+    MassPerUnitLength: 180
+    # Limits
+    CompressionIsLimited: Yes
+    AllowableTension: ~
+    MinRadius: [~, ~]
+    # Structure
+    EI: [120, ~]
+    EA: 700e3
+    PoissonRatio: 0.5
+    GJ: 80
+    TensionTorqueCoupling: 0
+    # Contact
+    OuterContactDiameter: ~
+    InnerContactDiameter: ~
+    ClashStiffness: 0
+    # Added mass, inertia and slam
+    Ca: [1, ~, 0]
+    Cm: [~, ~, ~]
+    Cs: 0
+    Ce: 0
+    # Drag and lift
+    Cd: [1.2, ~, 0.008]
+    Cl: 0
+    NormalDragLiftDiameter: ~
+    AxialDragLiftDiameter: ~
+    # Stress
+    StressOD: ~
+    StressID: ~
+    AllowableStress: ~
+    TensileStressLoadingFactor: 1
+    BendingStressLoadingFactor: 1
+    ShearStressLoadingFactor: 1
+    TorsionalStressLoadingFactor: 1
+    # Friction
+    SeabedLateralFrictionCoefficient: 0.5
+    SeabedAxialFrictionCoefficient: ~
+    # Structural damping
+    RayleighDampingCoefficients: (no damping)
+    # Drawing
+    Pen: [1, Solid, Lime]
+Lines:
+  - Name: Power Take Off Cable
+    IncludeTorsion: Yes
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Fixed, -31.857896796501663, 611.4494384568125e-6, -24, 0, 119.99999999999999, 0, ~]
+      - [Fixed, 60.15130906353105, -0.015222829900933377, -31.555800951028573, 0, 100, 0, ~]
+    # End connection stiffness and damping
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - [Infinity, Infinity, Infinity]
+      - [Infinity, Infinity, Infinity]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Cable, 95, 1]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    ApplySeabedContactLoadsAtCentreline: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+  - Name: Trench Tube
+    IncludeTorsion: Yes
+    TopEnd: End A
+    Representation: Finite element
+    PyModel: (none)
+    PreBendSpecifiedBy: Bend angle
+    DragFormulation: Standard
+    StaticsVIV: None
+    DynamicsVIV: None
+    WaveCalculationMethod: Specified by environment
+    # End connections
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
+      - [Fixed, 50.17109161144839, 0.006318102078165522, -29.547873536105893, 0, 100, 0, ~]
+      - [Fixed, 60.08173870568606, -0.10162049267775808, -31.542071004659036, 0, 100, 0, ~]
+    # End connection stiffness and damping
+    ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+      - [Infinity, Infinity, Infinity]
+      - [Infinity, Infinity, Infinity]
+    # Feeding
+    ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth:
+      - [~, 0, 0.001]
+      - [~, 0, 0.001]
+    # Sections
+    LineType, Length, TargetSegmentLength:
+      - [Burial Tube, 6, 1]
+    # Seabed
+    DecoupleLateralAndAxialSeabedFriction: No
+    ApplySeabedContactLoadsAtCentreline: No
+    # Contents
+    ContentsMethod: Uniform
+    IncludeAxialContentsInertia: Yes
+    ContentsDensity: 0
+    ContentsPressureRefZ: ~
+    ContentsPressure: 0
+    ContentsFlowRate: 0
+    # Statics
+    IncludedInStatics: Yes
+    StaticsStep1: Catenary
+    StaticsStep2: Full statics
+    StaticsSeabedFrictionPolicy: As laid
+    LayAzimuth: 180
+    AsLaidTension: 0
+Winches:
+  - Name: Winch1
+    WinchType: Simple
+    Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+      - [Power Take Off Cable, 0, 0, 0, End B]
+      - [Fixed, 65.60189068601368, -0.10088532965893338, -31.45247434679496]
+    Stiffness: 10e3
+    Damping: 0.01
+    ReleaseStage: ~
+    # Control
+    WinchControlType: Whole simulation
+    StaticMode: Specified length
+    StaticValue: 95
+    WholeSimulationControlMode: Specified tension
+    WholeSimulationTension: 1
+    # Drawing
+    Pen: [1, Solid, Red]
+Shapes:
+  - Name: Shape1
+    ShapeType: Trapped water
+    Shape: Block
+    Connection: Fixed
+    # Geometry
+    Origin: [50, -50, -33]
+    Size: [100, 100, 3]
+    Orientation: [0, 0, 0]
+Constraints:
+  - Name: end of cable constraint
+    Connection: Power Take Off Cable
+    InitialPosition: [0, 0, 0]
+    ConnectionzRelativeTo: End B
+    InitialAttitude: [180.0012718023852, 99.99999999997955, -179.99752381654946]
+    ConstraintType: Calculated DOFs
+    # General
+    CalculatedModelType: Cartesian
+    OutFrameReleaseStage: ~
+    # Degrees of freedom
+    DOFFree, DOFInitialValue:
+      - [No]
+      - [No]
+      - [No]
+      - [Yes, 0]
+      - [No]
+      - [No]
+    # Stiffness and damping
+    TranslationalStiffness: 0
+    RotationalStiffness: 10e3
+    TranslationalDamping: 0
+    RotationalDamping: 0
+    # Drawing
+    HideAfterOutFrameRelease: No
+LineContactData:
+  PenetratorData: []
+  Relationships:
+    - Name: Relationship1
+      Enabled: Yes
+      PenetratingLine: Power Take Off Cable
+      PenetratingLineIs: Inside
+      SplinedLine: Trench Tube
+      PenetratorLocations: (each node)
+      PenetratorCount: 1
+      ContainmentEnabled: Yes
+      NormalStiffness: 10e3
+      ShearStiffness: 500
+      LateralFrictionCoefficient: 0.5
+      AxialFrictionCoefficient: ~
+Groups:
+  Structure:
+    Power Take Off Cable: Model
+    Shape1: Model
+    Trench Tube: Model
+    end of cable constraint: Model
+    Winch1: Model
+  State:
+    Collapsed:
+      - Variable data
+...
