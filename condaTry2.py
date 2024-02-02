@@ -5,6 +5,9 @@ import random
 import math
 import rainflow
 import ffpack
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 #import spurioussadgjhasgdjasgd
 
 # 2022-09-20 10:27:21.240752
@@ -25,10 +28,21 @@ model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 di
 #print ("Vessel Type Length: " + str(umaineSemiPjType.Length))
 
 #--------------------------------------------------------
-MODULUS_COPPER = 200*10^9
-MODULUS_STEEL = 110*10^9
-YIELD_STRENGTH_COPPER = 33*10^6
-YIELD_STRENGTH_STEEL = 100*10^6     # data from web pages mostly (!)
+MODULUS_COPPER = 200*10^9           # E1
+MODULUS_STEEL = 110*10^9            # E2
+YIELD_STRENGTH_COPPER = 33*10^6     # Y1
+YIELD_STRENGTH_STEEL = 100*10^6     # Y2 data from web pages mostly (!) - could alter
+
+CONDUCTOR_RADIUS = 0
+ARMOUR_RADIUS = 0
+
+CONDUCTOR_AREA = 3492.6      # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
+ARMOUR_AREA = 1024.9         # A2
+
+
+# for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
+# nearest is 342A in 150mm^2 conductor cable (Nexans 2019 4.5.4)
+
 #--------------------------------------------------------
 
 
@@ -161,6 +175,26 @@ print("Bend moment history - Wall tension: ",str(bend_moment_history))
 
 # print all elements using list comprehension: [print (i) for i in bend_moment_history]
 
+# calculate tension stress concentrators
+stress_concentrator_copper_1 = Kt1(CONDUCTOR_AREA, ARMOUR_AREA, MODULUS_COPPER, MODULUS_STEEL)
+stress_concentrator_steel_2 = Kt2CONDUCTOR_AREA, ARMOUR_AREA, MODULUS_COPPER, MODULUS_STEEL)
+
+#TODO: calculate curvature stress concentrators
+
+# calculate stresses over the time history    
+DBeier_stress_copper = numpy.multiply(tension_history,stress_concentrator_copper_1)
+DBeier_stress_steel = numpy.multiply(tension_history,stress_concentrator_steel_2)
+
+# load
+DBeier_stress_copper_dataframe = pd.DataFrame(DBeier_stress_copper)
+DBeier_stress_steel_dataframe = pd.DataFrame(DBeier_stress_steel)
+
+DBeier_stress_copper_dataframe.plot()
+DBeier_stress_steel_dataframe.plot()
+
+plt.show()
+
+
 print("Finished")
 
 def circular_area(radius):
@@ -169,8 +203,10 @@ def circular_area(radius):
 def second_moment_area_circle(radius):
     return math.pi/4 * radius^4
 
-def Kt1(A1,A2,E1,E2):
+def Kt1(A1,A2,E1,E2):       # Stress concentrator, calling 1 the conductor, the armour 2
     return 1/(A1 + A2/(E2/E1))
 
 def Kt2(A1,A2,E1,E2):
     return 1/(A1/(E2/E1) + A2)
+
+#Beier_stress = 
