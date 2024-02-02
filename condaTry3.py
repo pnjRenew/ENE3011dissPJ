@@ -210,8 +210,8 @@ DBeier_stress_copper_dataframe = pd.DataFrame(DBeier_stress_copper)
 DBeier_stress_steel_dataframe = pd.DataFrame(DBeier_stress_steel)
 
 # plot stress history (against time) from dataframes
-DBeier_stress_copper_dataframe.plot()
-DBeier_stress_steel_dataframe.plot()
+ax = DBeier_stress_copper_dataframe.plot()
+DBeier_stress_steel_dataframe.plot(ax=ax)
 
 plt.rcParams["figure.autolayout"] = True
 plt.show()
