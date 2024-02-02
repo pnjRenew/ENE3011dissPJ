@@ -64,10 +64,10 @@ ARMOUR_AREA = 1024.9e-6         # A2
 
 
 
-print("Beginning statics...")
-model.CalculateStatics()                # only calculates statics
-print("Beginning simulation...")
-model.RunSimulation()
+#print("Beginning statics...")
+#model.CalculateStatics()                # only calculates statics
+#print("Beginning simulation...")
+#model.RunSimulation()
 
 start_dateTime = datetime.now()
 
@@ -216,6 +216,11 @@ DBeier_stress_steel_dataframe.plot()
 plt.rcParams["figure.autolayout"] = True
 plt.show()
 
+
+DBeier_rainflow_copper = rainflow.count_cycles(DBeier_stress_copper)
+DBeier_rainflow_steel = rainflow.count_cycles(DBeier_stress_steel)
+
+print("Rainflow count of stresses for copper by D Beier method",str(DBeier_rainflow_copper))
 
 print("Finished")
 
