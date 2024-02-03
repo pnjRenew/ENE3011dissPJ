@@ -72,7 +72,7 @@ class OrcaFlexBatch:
             return
     
     
-    def set_JONSWAP_wave(self, model, wave_period: float, wave_hs: float, wave_direction: float):
+    def set_jonswap_wave(self, model, wave_period: float, wave_hs: float, wave_direction: float):
         environment = model.environment
     #dir 90°, 1.5m H, period T = 5s
         for wave_name in environment.WaveName:      # was doing thisoriginally to modify existing setup - TO CHANGE?
@@ -84,13 +84,10 @@ class OrcaFlexBatch:
             print ("Direction: " + str(environment.WaveDirection))
             #print ("Length: " + str(environment.WaveLength) + '\n')
             environment.WaveType = "JONSWAP"
-            environment.WavePeriod = wave_period    # pj:9
-            self.wave_period = environment.WavePeriod
-            print ("Period: " + str(self.wave_period))
-            environment.WaveHeight = wave_height  # pj:5
-            self.wave_height = environment.WaveHeight  # m
-            print ("Height: " + str(self.wave_height))
-            self.wave_type = "JONSWAP"
+            environment.WaveHs = wave_hs  # pj:5
+            self.wave_hs = environment.WaveHeight  # m
+            print ("Hs: " + str(self.wave_hs))
+            self.wave_type = "JONSWAP"     # maybe set above from environment?
             return
     
     def print_batch_wave_data(self):
@@ -111,7 +108,6 @@ class OrcaFlexBatch:
     
     def print_batch_jonswap_wave_data(self):    # report batch (NB not environment) wave values
         print ("Direction: " + str(self.wave_direction))
-        print ("Period: " + str(self.wave_period))
         print ("Hs: " + str(self.wave_hs))
 
 # =============================================================================
@@ -201,8 +197,11 @@ environment = model.environment
 
 #dir 90°, 1.5m H, period T = 5s
 
+# set a regular wave
+#orcaflex_batch.set_regular_wave(model, 9, 1.5, 90)
 
-orcaflex_batch.set_regular_wave(model, 9, 1.5, 90)
+# set JONSWAP irregular waves
+orcaflex_batch.set_jonswap_wave(model, 9, 1.5, 90)
 
 
 
