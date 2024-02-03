@@ -95,21 +95,21 @@ class OrcaFlexBatch:
     
     def print_batch_wave_data(self):
         if self.wave_type == "regular":
-            print_regular_wave_data()
+            self.print_batch_regular_wave_data()
         elif self.wave_type == "JONSWAP":
-            print_jonswap_wave_data()
+            self.print_batch_jonswap_wave_data()
         else:
             if self.wave_type != "" and self.wave_type != None:
                 print("No print method defined for wave type ", self.wave_type)
             else:
                 print("No wave type selected")
     
-    def print_batch_regular_wave_data(self):    # report batch (not environment) wave values
+    def print_batch_regular_wave_data(self):    # report batch (NB not environment) wave values
         print ("Direction: " + str(self.wave_direction))
         print ("Period: " + str(self.wave_period))
         print ("Height: " + str(self.wave_height))
     
-    def print_batch_jonswap_wave_data(self):    # report batch (not environment) wave values
+    def print_batch_jonswap_wave_data(self):    # report batch (NB not environment) wave values
         print ("Direction: " + str(self.wave_direction))
         print ("Period: " + str(self.wave_period))
         print ("Hs: " + str(self.wave_hs))
@@ -242,7 +242,13 @@ orcaflex_batch.set_regular_wave(model, 9, 1.5, 90)
 # #initial_wave_height = environment.WaveHeight
 # #initial_wave_hs print("environment.WaveHeight:" + str(environment.WaveHeight))
 # print("initial_wave_height:" + str(initial_wave_height))
-orcaflex_batch.print_batch_regular_wave_data()
+
+
+# print whichever wave
+orcaflex_batch.print_batch_wave_data()
+
+
+
 # =============================================================================
 # ======================================================== environment.WaveHs
 #     print("initial_wave_hs:" + str(initial_wave_height))
