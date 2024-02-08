@@ -5,6 +5,8 @@ import random
 import math
 import rainflow
 import ffpack
+import ffpack.fdm
+import ffpack.lcc
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -109,6 +111,11 @@ class OrcaFlexBatch:
     def print_batch_jonswap_wave_data(self):    # report batch (NB not environment) wave values
         print ("Direction: " + str(self.wave_direction))
         print ("Hs: " + str(self.wave_hs))
+        
+        
+    def read_sn_csv(self):
+        self.copper_sn = pd.read_csv("Copper SN - NS.csv").values.tolist()
+        self.steel_sn = pd.read_csv("Steel SN - NS.csv").values.tolist()
 
 # =============================================================================
 # def circular_area(radius):
@@ -355,6 +362,16 @@ orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.DBe
 orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.DBeier_stress_steel)
 
 print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
+
+orcaflex_batch.read_sn_csv()
+print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
+print("orcaflex_batch.copper_sn", str(orcaflex_batch.steel_sn))
+
+orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_stress_copper)
+print("orcaflex_batch.rainflow_count ", str(orcaflex_batch.rainflow_count))
+
+orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count, orcaflex_batch.copper_sn, 100)    # need to multiply by MPa (e6)
+print("orcaflex_batch.copper_mp_damage ", str(orcaflex_batch.copper_mp_damage))
 
 print("Finished")
 
