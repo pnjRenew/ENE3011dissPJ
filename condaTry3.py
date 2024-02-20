@@ -53,6 +53,14 @@ class OrcaFlexBatch:
         Kt2 = 1/((A1*(E2/E1)) + A2)
         return Kt2
 
+    def Kc1(self, Y1, Cmax):
+        Kc1 = Y1/Cmax
+        return Kc1
+    
+    def Kc2(self, Y2, Cmax):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
+        Kc2 = Y2/Cmax
+        return Kc2
+    
 
 
     def set_regular_wave(self, model, wave_period: float, wave_height: float, wave_direction: float):
@@ -324,19 +332,32 @@ runtime_duration = finish_dateTime - start_dateTime
 print("Runtime duration: ", str(runtime_duration))
 
 #tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
-orcaflex_batch.tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
+orcaflex_batch.tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
 print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
 
 #bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
-orcaflex_batch.bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
+orcaflex_batch.bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
 print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
 
+orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+
+orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+
+orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+
+Cmax = orcaflex_batch.curvature_history.max()
+#Cxmax = orcaflex_batch.curvature_history.max()
+#Cymax = orcaflex_batch.curvature_history.max()     # max of x and y curvature components not used?
 
 # print all elements using list comprehension: [print (i) for i in bend_moment_history]
 
 # calculate tension stress concentrators
 orcaflex_batch.tension_stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
 orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
+
+orcaflex_batch.curvature_stress_concentrator_copper_1 = orcaflex_batch.Kc1(orcaflex_batch.YIELD_STRENGTH_COPPER, Cmax)
+orcaflex_batch.curvature_stress_concentrator_steel_2 = orcaflex_batch.Kc2(orcaflex_batch.YIELD_STRENGTH_STEEL, Cmax)
+
 
 print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
 print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
@@ -345,23 +366,38 @@ print(str(orcaflex_batch.tension_stress_concentrator_steel_2))
 #TODO: calculate curvature stress concentrators
 
 # calculate stresses over the time history    
-orcaflex_batch.DBeier_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)
-orcaflex_batch.DBeier_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)
+orcaflex_batch.DBeier_tension_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
+orcaflex_batch.DBeier_tension_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)
+# TODO: supercede this
+
+concentrated_tension_stress_1 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
+concentrated_tension_stress_2 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)   # Kt * T (element-wise)
+
+theta = 0   # (1) how do we know what angle is fatigue point location (max?) ? (2) should this be a class property?
+
+curvature_components = np.subtract(np.multiply(orcaflex_batch.curvature_x_history,math.sin(theta)), np.multiply(orcaflex_batch.curvature_y_history,math.cos(theta)))
+# curvature should be the same for both conductor _1 and armour _2 ?  TODO: CHECK THIS!!
+
+concentrated_curvature_stress_1 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_copper_1)
+concentrated_curvature_stress_2 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_steel_2)
 
 # load concentrated stress history into dataframes
-orcaflex_batch.DBeier_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.DBeier_stress_copper)
-orcaflex_batch.DBeier_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.DBeier_stress_steel)
+orcaflex_batch.DBeier_tension_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.DBeier_tension_stress_copper)
+orcaflex_batch.DBeier_tension_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.DBeier_tension_stress_steel)
 
 # plot stress history (against time) from dataframes
-ax = orcaflex_batch.DBeier_stress_copper_dataframe.plot()
-orcaflex_batch.DBeier_stress_steel_dataframe.plot(ax=ax)
+ax = orcaflex_batch.DBeier_tension_stress_copper_dataframe.plot()
+orcaflex_batch.DBeier_tension_stress_steel_dataframe.plot(ax=ax)
 
 plt.rcParams["figure.autolayout"] = True
 plt.show()
 
 
-orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.DBeier_stress_copper)
-orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.DBeier_stress_steel)
+
+
+
+orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_copper)
+orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_steel)
 
 print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
 
@@ -369,7 +405,7 @@ orcaflex_batch.read_sn_csv()
 print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
 print("orcaflex_batch.copper_sn", str(orcaflex_batch.steel_sn))
 
-orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_stress_copper)
+orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
 print("orcaflex_batch.rainflow_count ", str(orcaflex_batch.rainflow_count))
 
 orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count, orcaflex_batch.copper_sn, 100)    # need to multiply by MPa (e6)
