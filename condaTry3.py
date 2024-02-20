@@ -53,6 +53,8 @@ class OrcaFlexBatch:
         Kt2 = 1/((A1*(E2/E1)) + A2)
         return Kt2
 
+
+
     def set_regular_wave(self, model, wave_period: float, wave_height: float, wave_direction: float):
         environment = model.environment
     #dir 90°, 1.5m H, period T = 5s
@@ -333,18 +335,18 @@ print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_hist
 # print all elements using list comprehension: [print (i) for i in bend_moment_history]
 
 # calculate tension stress concentrators
-orcaflex_batch.stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
-orcaflex_batch.stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
+orcaflex_batch.tension_stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
+orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
 
-print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.stress_concentrator_copper_1,orcaflex_batch.stress_concentrator_steel_2))
-print(str(orcaflex_batch.stress_concentrator_copper_1))
-print(str(orcaflex_batch.stress_concentrator_steel_2))
+print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
+print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
+print(str(orcaflex_batch.tension_stress_concentrator_steel_2))
 
 #TODO: calculate curvature stress concentrators
 
 # calculate stresses over the time history    
-orcaflex_batch.DBeier_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.stress_concentrator_copper_1)
-orcaflex_batch.DBeier_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.stress_concentrator_steel_2)
+orcaflex_batch.DBeier_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)
+orcaflex_batch.DBeier_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)
 
 # load concentrated stress history into dataframes
 orcaflex_batch.DBeier_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.DBeier_stress_copper)
