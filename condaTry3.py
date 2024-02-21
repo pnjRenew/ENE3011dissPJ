@@ -339,11 +339,13 @@ print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
 orcaflex_batch.bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
 print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
 
-orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
 
-orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
 
-orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest tension at 0 metres (from observations)
+orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
+
+orcaflex_batch.x_bend_moment_history = array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest (negative) bend moment at 0 metres (from observations)
 
 Cmax = orcaflex_batch.curvature_history.max()
 #Cxmax = orcaflex_batch.curvature_history.max()
@@ -391,7 +393,7 @@ orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrat
 orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
 orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
 
-
+#PThies_stress=(M_moment_x/I_second_moment_x)*centreline_distance
 
 # plot stress history (against time) from dataframes
 #ax = orcaflex_batch.DBeier_tension_stress_copper_dataframe.plot()
