@@ -21,8 +21,10 @@ class OrcaFlexBatch:
         self.YIELD_STRENGTH_COPPER = 33e6     # Y1
         self.YIELD_STRENGTH_STEEL = 100e6     # Y2 data from web pages mostly (!) - could alter
         
-        self.CONDUCTOR_RADIUS = 0
-        self.ARMOUR_RADIUS = 0
+        self.CONDUCTOR_RADIUS = 0.00725  # from a 14.5mm conductor (150mm^2)
+        #self.ARMOUR_RADIUS = 0.0545      # 109.6mm overall outside diameter (150mm^2)
+        self.ARMOUR_RADIUS = 0.01825      # screen diameter 36.5 (150mm^2)
+# TODO: check - might want to change name to SCREEN_RADIUS?
         
         self.CONDUCTOR_AREA = 3492.6e-6     # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
         self.ARMOUR_AREA = 1024.9e-6         # A2
@@ -30,17 +32,17 @@ class OrcaFlexBatch:
         
         # for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
         # nearest is 342A in 150mm^2 conductor cable (Nexans 2019 4.5.4)
-        
+        # A=pi*r^2 so r=sqrt(A/pi)
         #--------------------------------------------------------
         self.wave_type = None
         return
 
     def circular_area(self, radius):
-        return math.pi*radius^2
+        return math.pi*radius**2
     
     
     def second_moment_area_circle(self, radius):
-        return math.pi/4 * radius^4
+        return (math.pi/4) * (radius**4)
     
     
     def Kt1(self, A1,A2,E1,E2):       # Stress concentrator, calling 1 the conductor, the armour 2
@@ -360,6 +362,11 @@ orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex
 orcaflex_batch.curvature_stress_concentrator_copper_1 = orcaflex_batch.Kc1(orcaflex_batch.YIELD_STRENGTH_COPPER, Cmax)
 orcaflex_batch.curvature_stress_concentrator_steel_2 = orcaflex_batch.Kc2(orcaflex_batch.YIELD_STRENGTH_STEEL, Cmax)
 
+# work out second moments of area
+orcaflex_batch.I_second_moment_x_conductor = orcaflex_batch.second_moment_area_circle(orcaflex_batch.CONDUCTOR_RADIUS)
+orcaflex_batch.I_second_moment_x_armour = orcaflex_batch.second_moment_area_circle(orcaflex_batch.ARMOUR_RADIUS) - orcaflex_batch.I_second_moment_x_conductor
+# may want to change to 'screen' from 'armour'
+# subtract inner (conductor) I from outer (screen/armour) full area I
 
 print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
 print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
@@ -393,7 +400,10 @@ orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrat
 orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
 orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
 
-#PThies_stress=(M_moment_x/I_second_moment_x)*centreline_distance
+PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
+
+# D Beier and P Thies stress calcs candidates for refactoring as methods perhaps
+
 
 # plot stress history (against time) from dataframes
 #ax = orcaflex_batch.DBeier_tension_stress_copper_dataframe.plot()
