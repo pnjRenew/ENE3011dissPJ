@@ -130,47 +130,16 @@ class OrcaFlexBatch:
         self.steel_sn = pd.read_csv("Steel SN - NS.csv").values.tolist()
         
     def calculate_damage(self, stress_time_series, material_sn):        # .orcaflex_batch.total_stress_1
-        # rainflow = rainflow.count_cycles(stress_time_series)
-        #orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.total_stress_2)
-        # no wait this is the non-ffpack way
     
-        #print("Rainflow count of stresses for copper by D Beier method",str(rainflow))
+        print("material_sn", str(material_sn))
     
-        #self.read_sn_csv()    #need to pass in sn table read somehow
-        print("copper_sn", str(material_sn))
-        #print("steel_sn", str(self.steel_sn))
-    
-        #orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
         rainflow_count_material = ffpack.lcc.astmRainflowCounting(stress_time_series)
-        print("rainflow_count_copper ", str(rainflow_count_material))
+        print("rainflow_count_material ", str(rainflow_count_material))
     
-        # minerDamageModelClassic(lccData, snData, fatigueLimit)
-        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
-        print("copper_mp_damage ", str(mp_damage))
+        # minerDamageModelClassic(lccData, snData, fatigueLimit)     fatigueLimit 100?
+        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, 1)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+        print("material_mp_damage ", str(mp_damage))
         return mp_damage
-
-
-# =============================================================================
-# def circular_area(radius):
-#     return math.pi*radius^2
-# 
-# 
-# def second_moment_area_circle(radius):
-#     return math.pi/4 * radius^4
-# 
-# 
-# def Kt1(A1,A2,E1,E2):       # Stress concentrator, calling 1 the conductor, the armour 2
-#     Kt1 = (1/(A1 + (A2*(E2/E1))))
-#     return Kt1
-# 
-# 
-# def Kt2(A1,A2,E1,E2):
-#     #return 1/((A1*(E2/E1)) + A2)
-#     Kt2 = 1/((A1*(E2/E1)) + A2)
-#     return Kt2
-# =============================================================================
-
-
 
 
 
@@ -214,10 +183,6 @@ model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 di
 
 
 
-#print("Beginning statics...")
-#model.CalculateStatics()                # only calculates statics
-#print("Beginning simulation...")
-#model.RunSimulation()
 
 start_dateTime = datetime.now()
 
@@ -245,42 +210,6 @@ orcaflex_batch.set_jonswap_wave(model, 9, 1.5, 90)
 
 
 
-# =============================================================================
-# for wave_name in environment.WaveName:
-#     print ("Name: " + str(wave_name))
-#     #environment.SelectedWaveTrain = wave_name
-#     environment.SelectedWave = wave_name
-#     environment.WaveDirection = 90  # pj:0
-#     print ("Direction: " + str(environment.WaveDirection))
-#     print ("Period: " + str(environment.WavePeriod))
-#     #print ("Length: " + str(environment.WaveLength) + '\n')
-#     
-#     environment.WavePeriod = 5.0    # pj:9
-#     print ("Period: " + str(environment.WavePeriod))
-#     
-#     environment.WaveHeight = 1.5  # pj:5
-#     initial_wave_height = environment.WaveHeight  # maybe have to get/read before any other environment variable set
-# =============================================================================
-# =============================================================================
-#     environment.WaveType = "JONSWAP"  # WaveType has to be set before Hs can be set
-#     environment.WaveHs=5
-#      
-#     print ("Hs: " + str(environment.WaveHs))
-#     environment.WaveHs=6
-#     print ("Hs now: " + str(environment.WaveHs))
-#     initial_wave_hs = environment.WaveHs
-#     
-#     print("initial_wave_hs:" + str(initial_wave_hs))
-#     print ("Hs now (again): " + str(environment.WaveHs))
-# =============================================================================
-        
-# =============================================================================
-# print("Wave direction: " + str(environment.WaveDirection))
-# 
-# initial_wave_direction = int(environment.WaveDirection)
-# #initial_wave_height = environment.WaveHeight
-# #initial_wave_hs print("environment.WaveHeight:" + str(environment.WaveHeight))
-# print("initial_wave_height:" + str(initial_wave_height))
 
 
 # print whichever wave
@@ -288,23 +217,11 @@ orcaflex_batch.print_batch_wave_data()
 
 
 
-# =============================================================================
-# ======================================================== environment.WaveHs
-#     print("initial_wave_hs:" + str(initial_wave_height))
-# =============================================================================
-    
-#     for x in range(initial_wave_direction, initial_wave_direction + 180, 10):  # alter by 10 degrees until in reverse direction
-#         environment.WaveDirection = environment.WaveDirection + 10
-#         #environment.WaveHeight = initial_wave_height + random.randrange(-3,3)  # randomise wave height
-#         environment.WaveHs = initial_wave_hs + random.randrange(-3,3)  # randomise wave significant  height
+  
 print("Beginning statics...")
 model.CalculateStatics()                # only calculates statics
 print("Beginning simulation...")
 model.RunSimulation()
-#         model.SaveWaveSearchSpreadsheet("wavesearch" + str(environment.WaveDirection) + ".xls")
-#         print("Wave direction now: " + str(environment.WaveDirection))
-#         #print("Wave height now: " + str(environment.WaveHeight))
-#         print("Wave Hs now: " + str(environment.WaveHs))
 
 
 
@@ -317,25 +234,20 @@ print("Simulation completed time: " + str(completed_dateTime))
 
 array_cable = model["Array Cable"]
 
-#tension = array_cable.RangeGraph("Wall tension",OrcFxAPI.SpecifiedPeriod(-8, 160))
-#tension = array_cable.RangeGraph("Wall tension")
 orcaflex_batch.tension = array_cable.RangeGraph("Wall tension")
 print("tension: ",str(orcaflex_batch.tension))
 # https://stackoverflow.com/a/36943813/11365317
 
 # bend moment, shear forces, torsion moment, total load
 
-#bend_moment = array_cable.RangeGraph("Bend moment")
 orcaflex_batch.bend_moment = array_cable.RangeGraph("Bend moment")
 
 print("Bend moment: ",str(orcaflex_batch.bend_moment))
 
-#shear_force = array_cable.RangeGraph("Shear force")
 orcaflex_batch.shear_force = array_cable.RangeGraph("Shear force")
 
 print("Shear force: ",str(orcaflex_batch.shear_force))
 
-#worst_zz_stress = array_cable.RangeGraph("Worst ZZ stress")
 orcaflex_batch.worst_zz_stress = array_cable.RangeGraph("Worst ZZ stress")
 
 print("ZZ stress: ",str(orcaflex_batch.worst_zz_stress))
@@ -354,11 +266,9 @@ runtime_duration = finish_dateTime - start_dateTime
 
 print("Runtime duration: ", str(runtime_duration))
 
-#tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
 orcaflex_batch.tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
 print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
 
-#bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))
 orcaflex_batch.bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
 print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
 
@@ -393,7 +303,7 @@ print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batc
 print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
 print(str(orcaflex_batch.tension_stress_concentrator_steel_2))
 
-#TODO: calculate curvature stress concentrators
+
 
 # calculate stresses over the time history    
 orcaflex_batch.DBeier_tension_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
@@ -416,19 +326,14 @@ orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrat
 
 
 # load concentrated stress history into dataframes
-#orcaflex_batch.DBeier_tension_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.DBeier_tension_stress_copper)
-#orcaflex_batch.DBeier_tension_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.DBeier_tension_stress_steel)
 orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
 orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
 
 PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
+# https://stackoverflow.com/a/9171196/11365317
 
 # D Beier and P Thies stress calcs candidates for refactoring as methods perhaps
 
-
-# plot stress history (against time) from dataframes
-#ax = orcaflex_batch.DBeier_tension_stress_copper_dataframe.plot()
-#orcaflex_batch.DBeier_tension_stress_steel_dataframe.plot(ax=ax)
 
 ax = orcaflex_batch.DBeier_total_stress_copper_dataframe.plot()
 orcaflex_batch.DBeier_total_stress_steel_dataframe.plot(ax=ax)
@@ -438,31 +343,16 @@ plt.rcParams["figure.autolayout"] = True
 plt.show()
 
 
-
-
-
-#orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_copper)
-#orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_steel)
-#orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.total_stress_1)
-#orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.total_stress_2)
-
-
-#print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
-
-
 orcaflex_batch.read_sn_csv()            # read in SN curve data for copper and steel materials NB keep this
 print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
 print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
 
-#orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
-#orcaflex_batch.rainflow_count_copper = ffpack.lcc.astmRainflowCounting(orcaflex_batch.total_stress_1)
-#print("orcaflex_batch.rainflow_count_copper ", str(orcaflex_batch.rainflow_count_copper))
-
-#orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count_copper, orcaflex_batch.copper_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
-#print("orcaflex_batch.copper_mp_damage ", str(orcaflex_batch.copper_mp_damage))
 
 damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
-print("(from method) Damage:", damage_copper_dbeier)
+print("(from method, for D Beier calc) Damage:", damage_copper_dbeier)
+
+damage_copper_pthies = orcaflex_batch.calculate_damage(PThies_stress_copper, orcaflex_batch.copper_sn)
+print("(from method, for P Thies calc) Damage:", damage_copper_pthies)
 
 print("Finished")
 
