@@ -145,41 +145,8 @@ class OrcaFlexBatch:
 
 orcaflex_batch = OrcaFlexBatch()
 
-#model = OrcFxAPI.Model("MyFile.dat")
-
-#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\diss orcaflex\Attempt 1 OrcaFlex tutorial attempt PNJ Oct 23\Attempt 1 OrcaFlex tutorial PNJ lines added.dat")
-#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\diss orcaflex\Attempt 1 OrcaFlex tutorial attempt PNJ Oct 23\Attempt 1 OrcaWave tutorial PNJ xz maybe ok.owr")
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
-
-#umaineSemiPjType = model["Umaine semi PJ type"]
-
-#print("Type: " + str(type(umaineSemiPjType)))
-#print(umaineSemiPjType.getmembers())       # list all members
-#print ("Vessel Type Length: " + str(umaineSemiPjType.Length))
-#umaineSemiPjType.Length = 88
-#print ("Vessel Type Length: " + str(umaineSemiPjType.Length))
-
-#--------------------------------------------------------
-# =============================================================================
-# MODULUS_COPPER = 200e9           # E1
-# MODULUS_STEEL = 110e9            # E2
-# YIELD_STRENGTH_COPPER = 33e6     # Y1
-# YIELD_STRENGTH_STEEL = 100e6     # Y2 data from web pages mostly (!) - could alter
-# 
-# CONDUCTOR_RADIUS = 0
-# ARMOUR_RADIUS = 0
-# 
-# CONDUCTOR_AREA = 3492.6e-6     # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
-# ARMOUR_AREA = 1024.9e-6         # A2
-# =============================================================================
-
-
-# for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
-# nearest is 342A in 150mm^2 conductor cable (Nexans 2019 4.5.4)
-
-#--------------------------------------------------------
-
 
 
 
