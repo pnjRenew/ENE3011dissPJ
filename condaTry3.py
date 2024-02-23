@@ -10,6 +10,9 @@ import ffpack.lcc
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import rawdatx.read_TOA5 as read_raw_data
+import rawdatx.process_XML as process_XML
+import xlsxwriter
 #import spurioussadgjhasgdjasgd
 
 class OrcaFlexBatch:
@@ -142,12 +145,29 @@ class OrcaFlexBatch:
         return mp_damage
 
 
+    def read_wave_TOA5(self):
+        rawdatx_config='./rawdatx_config.cfg'
+        read_raw_data.main(rawdatx_config)  # read in TOA5 text file
+        process_XML.main(rawdatx_config)    # make Excel file (do we want this?)
+        
+    def read_Hs_T(self):
+        df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02.csv")  # read Hs and T to a dataframe
+        return df
+    
+    #def Hs_T_histogram(self,hs_t_array):
+        #plt.hist2d()
+        
 
 orcaflex_batch = OrcaFlexBatch()
 
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
 
+
+#orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
+hs_t_df = orcaflex_batch.read_Hs_T()        # Hs and T in a dataframe
+hs_t_matrix = plt.hist2d(hs_t_df["Hm0_Avg"].values.tolist(), hs_t_df["Tm02_Avg"].values.tolist(),[range(10), range(10)])[0]    # plot 2D matrix, using e.g. 10x10
+hs_t_matrix = (hs_t_matrix/hs_t_matrix.max())
 
 
 

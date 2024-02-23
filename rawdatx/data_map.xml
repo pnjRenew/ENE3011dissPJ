@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<measurements from="2015/05/03 11:45">
+    <group name="Logger">
+        <map name="Sig wave height" unit="m" src="Hm0_Avg" />
+        <map name="Period" unit="S" src="Tm02_Avg" />
+    </group>
+</measurements>
