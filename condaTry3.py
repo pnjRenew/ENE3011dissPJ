@@ -128,6 +128,27 @@ class OrcaFlexBatch:
     def read_sn_csv(self):
         self.copper_sn = pd.read_csv("Copper SN - NS.csv").values.tolist()
         self.steel_sn = pd.read_csv("Steel SN - NS.csv").values.tolist()
+        
+    def calculate_damage(self, stress_time_series, material_sn):        # .orcaflex_batch.total_stress_1
+        # rainflow = rainflow.count_cycles(stress_time_series)
+        #orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.total_stress_2)
+        # no wait this is the non-ffpack way
+    
+        #print("Rainflow count of stresses for copper by D Beier method",str(rainflow))
+    
+        #self.read_sn_csv()    #need to pass in sn table read somehow
+        print("copper_sn", str(material_sn))
+        #print("steel_sn", str(self.steel_sn))
+    
+        #orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
+        rainflow_count_material = ffpack.lcc.astmRainflowCounting(stress_time_series)
+        print("rainflow_count_copper ", str(rainflow_count_material))
+    
+        # minerDamageModelClassic(lccData, snData, fatigueLimit)
+        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+        print("copper_mp_damage ", str(mp_damage))
+        return mp_damage
+
 
 # =============================================================================
 # def circular_area(radius):
@@ -428,9 +449,10 @@ orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.tota
 
 print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
 
-orcaflex_batch.read_sn_csv()
+
+orcaflex_batch.read_sn_csv()            # read in SN curve data for copper and steel materials NB keep this
 print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
-print("orcaflex_batch.copper_sn", str(orcaflex_batch.steel_sn))
+print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
 
 #orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
 orcaflex_batch.rainflow_count_copper = ffpack.lcc.astmRainflowCounting(orcaflex_batch.total_stress_1)
@@ -439,9 +461,14 @@ print("orcaflex_batch.rainflow_count_copper ", str(orcaflex_batch.rainflow_count
 orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count_copper, orcaflex_batch.copper_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
 print("orcaflex_batch.copper_mp_damage ", str(orcaflex_batch.copper_mp_damage))
 
+damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
+print("(from method) Damage:", damage_copper_dbeier)
+
 print("Finished")
 
 
 
+    
+    
 
-#Beier_stress = 
+
