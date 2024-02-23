@@ -443,11 +443,11 @@ plt.show()
 
 #orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_copper)
 #orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.DBeier_tension_stress_steel)
-orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.total_stress_1)
-orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.total_stress_2)
+#orcaflex_batch.DBeier_rainflow_copper = rainflow.count_cycles(orcaflex_batch.total_stress_1)
+#orcaflex_batch.DBeier_rainflow_steel = rainflow.count_cycles(orcaflex_batch.total_stress_2)
 
 
-print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
+#print("Rainflow count of stresses for copper by D Beier method",str(orcaflex_batch.DBeier_rainflow_copper))
 
 
 orcaflex_batch.read_sn_csv()            # read in SN curve data for copper and steel materials NB keep this
@@ -455,11 +455,11 @@ print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
 print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
 
 #orcaflex_batch.rainflow_count = ffpack.lcc.astmRainflowCounting(orcaflex_batch.DBeier_tension_stress_copper)
-orcaflex_batch.rainflow_count_copper = ffpack.lcc.astmRainflowCounting(orcaflex_batch.total_stress_1)
-print("orcaflex_batch.rainflow_count_copper ", str(orcaflex_batch.rainflow_count_copper))
+#orcaflex_batch.rainflow_count_copper = ffpack.lcc.astmRainflowCounting(orcaflex_batch.total_stress_1)
+#print("orcaflex_batch.rainflow_count_copper ", str(orcaflex_batch.rainflow_count_copper))
 
-orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count_copper, orcaflex_batch.copper_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
-print("orcaflex_batch.copper_mp_damage ", str(orcaflex_batch.copper_mp_damage))
+#orcaflex_batch.copper_mp_damage = ffpack.fdm.minerDamageModelClassic(orcaflex_batch.rainflow_count_copper, orcaflex_batch.copper_sn, 100)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+#print("orcaflex_batch.copper_mp_damage ", str(orcaflex_batch.copper_mp_damage))
 
 damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
 print("(from method) Damage:", damage_copper_dbeier)
