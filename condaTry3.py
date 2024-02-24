@@ -38,6 +38,8 @@ class OrcaFlexBatch:
         # A=pi*r^2 so r=sqrt(A/pi)
         #--------------------------------------------------------
         self.wave_type = None
+        self.x_bins = 10
+        self.y_bins = 10    # Hs:T wave sea state matrix bin edges (as integers) - could improve to decimals
         return
 
     def circular_area(self, radius):
@@ -166,10 +168,13 @@ model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 di
 
 #orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
 hs_t_df = orcaflex_batch.read_Hs_T()        # Hs and T in a dataframe
-hs_t_matrix = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(10), range(10)])[0]    # plot 2D matrix, using e.g. 10x10, save matrix values
+hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 # hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
 # element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
 
+hs_t_matrix_rotated = np.rot90(hs_t_matrix, 1)  # in Hs(y axis) T(x) format for people to read
+np.savetxt("Hs_T_matrix.csv", hs_t_matrix, delimiter=',')
+np.savetxt("Hs_T_matrix_rotated.csv", hs_t_matrix_rotated, delimiter=',')
 
 start_dateTime = datetime.now()
 
