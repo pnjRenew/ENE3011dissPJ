@@ -156,7 +156,8 @@ class OrcaFlexBatch:
         process_XML.main(rawdatx_config)    # make Excel file (do we want this?)
         
     def read_Hs_T(self):
-        df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02-and-fp-and-date-2016.csv")  # read Hs and T to a dataframe
+        # df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02-and-fp-and-date-2016.csv")  # read Hs and T to a dataframe
+        df = pd.read_csv(r"../../../diss-data/Race-Bank/2017-Race-Bank.csv")  # read Hs and T to a dataframe
         return df
     
     #def Hs_T_histogram(self,hs_t_array):
@@ -171,7 +172,8 @@ model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 di
 
 #orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
 hs_t_df = orcaflex_batch.read_Hs_T()        # Hs and T in a dataframe
-hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+#hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tm02"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 # hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
 # element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
 
