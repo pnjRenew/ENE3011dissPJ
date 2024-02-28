@@ -19,6 +19,7 @@ class OrcaFlexBatch:
     
     def __init__(self):
         #--------------------------------------------------------
+        # NB all units here should be SI, so m, Pa etc
         self.MODULUS_COPPER = 200e9           # E1
         self.MODULUS_STEEL = 110e9            # E2
         self.YIELD_STRENGTH_COPPER = 33e6     # Y1
@@ -31,6 +32,8 @@ class OrcaFlexBatch:
         
         self.CONDUCTOR_AREA = 3492.6e-6     # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
         self.ARMOUR_AREA = 1024.9e-6         # A2
+        
+        self.CABLE_OUTER_DIAMETER = 0.1096
         
         
         # for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
@@ -181,6 +184,12 @@ start_dateTime = datetime.now()
 print("Start time", str(start_dateTime))
 
 
+
+# for every Hs
+# for every T
+# for every count of this Hs:T
+# generate a wave of this Hs and T
+
 for wave in model.waveComponents:
     print (wave)
 
@@ -251,26 +260,27 @@ finish_dateTime = datetime.now()
 print("Finish time" + str(finish_dateTime))
 
 sim_duration = model.simulationStopTime - model.simulationStartTime
-print(str(sim_duration))
+print("Simulation duration: ", str(sim_duration))
 
 
 runtime_duration = finish_dateTime - start_dateTime
 
 print("Runtime duration: ", str(runtime_duration))
 
-orcaflex_batch.tension_history = array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
+orcaflex_batch.tension_history = np.multiply(array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations) (kN) (*1e3 to SI)
 print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
 
-orcaflex_batch.bend_moment_history = array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5))    # greatest tension at 0.5 metres (from observations)
+orcaflex_batch.bend_moment_history = np.multiply(array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations)  (kNm) (*1e3 to SI)
 print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
 
-orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
+orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
 
-orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
+orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
 
-orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations)
+orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
 
-orcaflex_batch.x_bend_moment_history = array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest (negative) bend moment at 0 metres (from observations)
+#orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1000)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI)
+orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI - or is it - code values unlike GUI may be in SI units Nm, so * 1) 
 
 Cmax = orcaflex_batch.curvature_history.max()
 #Cxmax = orcaflex_batch.curvature_history.max()
@@ -321,7 +331,13 @@ orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrat
 orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
 orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
 
-PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
+
+conductor_y = orcaflex_batch.CABLE_OUTER_DIAMETER / 4   # conductor centres approx half way out from cable centre (from diagram)
+
+#PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
+
+PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
+
 # https://stackoverflow.com/a/9171196/11365317
 
 # D Beier and P Thies stress calcs candidates for refactoring as methods perhaps
