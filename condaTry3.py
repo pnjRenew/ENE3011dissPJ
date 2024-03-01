@@ -226,6 +226,8 @@ model.CalculateStatics()                # only calculates statics
 print("Beginning simulation...")
 model.RunSimulation()
 
+model.ExtendSimulation(1800)            # run sim for extra half hour
+model.RunSimulation()
 
 
 completed_dateTime = datetime.now()
