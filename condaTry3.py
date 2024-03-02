@@ -15,156 +15,9 @@ import rawdatx.process_XML as process_XML
 import xlsxwriter
 #import spurioussadgjhasgdjasgd
 
-class OrcaFlexBatch:
-    
-    def __init__(self):
-        #--------------------------------------------------------
-        # NB all units here should be SI, so m, Pa etc
-        self.MODULUS_COPPER = 200e9           # E1
-        self.MODULUS_STEEL = 110e9            # E2
-        self.YIELD_STRENGTH_COPPER = 33e6     # Y1
-        self.YIELD_STRENGTH_STEEL = 100e6     # Y2 data from web pages mostly (!) - could alter
-        
-        self.CONDUCTOR_RADIUS = 0.00725  # from a 14.5mm conductor (150mm^2)
-        #self.ARMOUR_RADIUS = 0.0545      # 109.6mm overall outside diameter (150mm^2)
-        self.ARMOUR_RADIUS = 0.01825      # screen diameter 36.5 (150mm^2)
-# TODO: check - might want to change name to SCREEN_RADIUS?
-        
-        self.CONDUCTOR_AREA = 3492.6e-6     # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
-        self.ARMOUR_AREA = 1024.9e-6         # A2
-        
-        self.CABLE_OUTER_DIAMETER = 0.1096
-        
-        
-        # for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
-        # nearest is 342A in 150mm^2 conductor cable (Nexans 2019 4.5.4)
-        # A=pi*r^2 so r=sqrt(A/pi)
-        #--------------------------------------------------------
-        self.wave_type = None
-        self.x_bins = 10
-        self.y_bins = 10    # Hs:T wave sea state matrix bin edges (as integers) - could improve to decimals
-        return
+import orcaflex_batch
 
-    def circular_area(self, radius):
-        return math.pi*radius**2
-    
-    
-    def second_moment_area_circle(self, radius):
-        return (math.pi/4) * (radius**4)
-    
-    
-    def Kt1(self, A1,A2,E1,E2):       # Stress concentrator, calling 1 the conductor, the armour 2
-        Kt1 = (1/(A1 + (A2*(E2/E1))))
-        return Kt1
-    
-    
-    def Kt2(self, A1,A2,E1,E2):
-        #return 1/((A1*(E2/E1)) + A2)
-        Kt2 = 1/((A1*(E2/E1)) + A2)
-        return Kt2
-
-    def Kc1(self, Y1, Cmax):
-        Kc1 = Y1/Cmax
-        return Kc1
-    
-    def Kc2(self, Y2, Cmax):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
-        Kc2 = Y2/Cmax
-        return Kc2
-    
-
-
-    def set_regular_wave(self, model, wave_period: float, wave_height: float, wave_direction: float):
-        environment = model.environment
-    #dir 90°, 1.5m H, period T = 5s
-        for wave_name in environment.WaveName:      # was doing thisoriginally to modify existing setup - TO CHANGE?
-            print ("Name: " + str(wave_name))
-            #environment.SelectedWaveTrain = wave_name
-            environment.SelectedWave = wave_name
-            environment.WaveDirection = wave_direction  # pj:0
-            self.wave_direction = int(environment.WaveDirection)
-            print ("Direction: " + str(environment.WaveDirection))
-            #print ("Length: " + str(environment.WaveLength) + '\n')            
-            environment.WavePeriod = wave_period    # pj:9
-            self.wave_period = environment.WavePeriod
-            print ("Period: " + str(self.wave_period))
-            environment.WaveHeight = wave_height  # pj:5
-            self.wave_height = environment.WaveHeight  # m
-            print ("Height: " + str(self.wave_height))
-            self.wave_type = "regular"
-            return
-    
-    
-    def set_jonswap_wave(self, model, wave_period: float, wave_hs: float, wave_direction: float):
-        environment = model.environment
-    #dir 90°, 1.5m H, period T = 5s
-        for wave_name in environment.WaveName:      # was doing thisoriginally to modify existing setup - TO CHANGE?
-            print ("Name: " + str(wave_name))
-            #environment.SelectedWaveTrain = wave_name
-            environment.SelectedWave = wave_name
-            environment.WaveDirection = wave_direction  # pj:0
-            self.wave_direction = int(environment.WaveDirection)
-            print ("Direction: " + str(environment.WaveDirection))
-            #print ("Length: " + str(environment.WaveLength) + '\n')
-            environment.WaveType = "JONSWAP"
-            environment.WaveHs = wave_hs  # pj:5
-            self.wave_hs = environment.WaveHeight  # m
-            print ("Hs: " + str(self.wave_hs))
-            self.wave_type = "JONSWAP"     # maybe set above from environment?
-            return
-    
-    def print_batch_wave_data(self):
-        if self.wave_type == "regular":
-            self.print_batch_regular_wave_data()
-        elif self.wave_type == "JONSWAP":
-            self.print_batch_jonswap_wave_data()
-        else:
-            if self.wave_type != "" and self.wave_type != None:
-                print("No print method defined for wave type ", self.wave_type)
-            else:
-                print("No wave type selected")
-    
-    def print_batch_regular_wave_data(self):    # report batch (NB not environment) wave values
-        print ("Direction: " + str(self.wave_direction))
-        print ("Period: " + str(self.wave_period))
-        print ("Height: " + str(self.wave_height))
-    
-    def print_batch_jonswap_wave_data(self):    # report batch (NB not environment) wave values
-        print ("Direction: " + str(self.wave_direction))
-        print ("Hs: " + str(self.wave_hs))
-        
-        
-    def read_sn_csv(self):
-        self.copper_sn = pd.read_csv("Copper SN - NS.csv").values.tolist()
-        self.steel_sn = pd.read_csv("Steel SN - NS.csv").values.tolist()
-        
-    def calculate_damage(self, stress_time_series, material_sn):        # .orcaflex_batch.total_stress_1
-    
-        print("material_sn", str(material_sn))
-    
-        rainflow_count_material = ffpack.lcc.astmRainflowCounting(stress_time_series)
-        print("rainflow_count_material ", str(rainflow_count_material))
-    
-        # minerDamageModelClassic(lccData, snData, fatigueLimit)     fatigueLimit 100?
-        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, 1)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
-        print("material_mp_damage ", str(mp_damage))
-        return mp_damage
-
-
-    def read_wave_TOA5(self):
-        rawdatx_config='./rawdatx_config.cfg'
-        read_raw_data.main(rawdatx_config)  # read in TOA5 text file
-        process_XML.main(rawdatx_config)    # make Excel file (do we want this?)
-        
-    def read_Hs_T(self):
-        # df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02-and-fp-and-date-2016.csv")  # read Hs and T to a dataframe
-        df = pd.read_csv(r"../../../diss-data/Race-Bank/2017-Race-Bank.csv")  # read Hs and T to a dataframe
-        return df
-    
-    #def Hs_T_histogram(self,hs_t_array):
-        #plt.hist2d()
-        
-
-orcaflex_batch = OrcaFlexBatch()
+orcaflex_batch = orcaflex_batch.OrcaFlexBatch()
 
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
@@ -173,24 +26,73 @@ model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 di
 #orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
 hs_t_df = orcaflex_batch.read_Hs_T()        # Hs and T in a dataframe
 #hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+
 hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tm02"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 # hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
 # element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
+
+#mdir
+
+# getting Hs:T for all directions (useful for info)
 
 hs_t_matrix_rotated = np.rot90(hs_t_matrix, 1)  # in Hs(y axis) T(x) format for people to read
 np.savetxt("Hs_T_matrix.csv", hs_t_matrix, delimiter=',')
 np.savetxt("Hs_T_matrix_rotated.csv", hs_t_matrix_rotated, delimiter=',')
 
+
+hs_t_df_list = orcaflex_batch.read_Hs_T_dir()        # Hs and T in a dataframe
+#hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+
+# getting Hs:T in a list filtered by direction
+
+'''
+hs_t_matrix_directional = [None] * len(hs_t_df_list)
+x_axis_directional = [None] * len(hs_t_df_list)
+y_axis_directional = [None] * len(hs_t_df_list)
+quad_mesh_directional = [None] * len(hs_t_df_list)
+hs_t_matrix_rotated_directional = [None] * len(hs_t_df_list)
+'''
+
+hs_t_matrix_directional = []
+x_axis_directional = []
+y_axis_directional = []
+quad_mesh_directional = []
+hs_t_matrix_rotated_directional = []
+
+for i, hs_t_df in enumerate(hs_t_df_list):        # TODO: do this more pythonically
+    hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tm02"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+
+# hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
+# element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
+
+#mdir
+    hs_t_matrix_directional.append(hs_t_matrix)
+    x_axis_directional.append(x_axis)
+    y_axis_directional.append(y_axis)
+    quad_mesh_directional.append(quad_mesh)
+    
+    # TODO: CHECK THAT THIS IS REALLY WORKING OK! Don't trust Python loops
+    
+    rotated_hs_t = np.rot90(hs_t_matrix, 1)
+    
+    #hs_t_matrix_rotated_directional.append(np.rot90(hs_t_matrix, 1))  # in Hs(y axis) T(x) format for people to read
+    hs_t_matrix_rotated_directional.append(rotated_hs_t)  # in Hs(y axis) T(x) format for people to read
+    np.savetxt("Hs_T_matrix" + str(i) + ".csv", hs_t_matrix, delimiter=',')
+    np.savetxt("Hs_T_matrix_rotated" + str(i) + ".csv", hs_t_matrix_rotated, delimiter=',')
+
+
 start_dateTime = datetime.now()
 
 print("Start time", str(start_dateTime))
 
-
+# duration of Race Bank samples is 
 
 # for every Hs
 # for every T
-# for every count of this Hs:T
-# generate a wave of this Hs and T
+# for every dir
+    # generate a wave of this Hs and T
+    # run a simulation with this wave and multiply damage by the count of this Hs:T and dir
+
 
 for wave in model.waveComponents:
     print (wave)
@@ -226,9 +128,10 @@ model.CalculateStatics()                # only calculates statics
 print("Beginning simulation...")
 model.RunSimulation()
 
+'''
 model.ExtendSimulation(1800)            # run sim for extra half hour
 model.RunSimulation()
-
+'''
 
 completed_dateTime = datetime.now()
 
