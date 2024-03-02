@@ -72,12 +72,10 @@ for i, hs_t_df in enumerate(hs_t_df_list):        # TODO: do this more pythonica
     y_axis_directional.append(y_axis)
     quad_mesh_directional.append(quad_mesh)
     
-    # TODO: CHECK THAT THIS IS REALLY WORKING OK! Don't trust Python loops
-    # hs_t_matrix getting used each time
-    #rotated_hs_t = np.rot90(hs_t_matrix, 1)
-    
-    hs_t_matrix_rotated_directional.append(np.rot90(copy.deepcopy(hs_t_matrix), 1))  # in Hs(y axis) T(x) format for people to read
-    #hs_t_matrix_rotated_directional.append(rotated_hs_t)  # in Hs(y axis) T(x) format for people to read
+    # TODO: CHECK THAT THESE ARE REALLY WORKING OK! Don't trust Python loops
+
+    hs_t_matrix_rotated = np.rot90(hs_t_matrix, 1)  # in Hs(y axis) T(x) orientation for people to read
+    hs_t_matrix_rotated_directional.append(hs_t_matrix_rotated)
     np.savetxt("Hs_T_matrix" + str(i) + ".csv", hs_t_matrix, delimiter=',')
     np.savetxt("Hs_T_matrix_rotated" + str(i) + ".csv", hs_t_matrix_rotated, delimiter=',')
 
