@@ -73,7 +73,8 @@ for i, hs_t_df in enumerate(hs_t_df_list):        # TODO: do this more pythonica
     quad_mesh_directional.append(quad_mesh)
     
     # TODO: CHECK THAT THESE ARE REALLY WORKING OK! Don't trust Python loops
-
+    # (NB this matrix from matplotlib is sorta rotated)
+    
     hs_t_matrix_rotated = np.rot90(hs_t_matrix, 1)  # in Hs(y axis) T(x) orientation for people to read
     hs_t_matrix_rotated_directional.append(hs_t_matrix_rotated)
     np.savetxt("Hs_T_matrix" + str(i) + ".csv", hs_t_matrix, delimiter=',')
@@ -85,9 +86,23 @@ start_dateTime = datetime.now()
 print("Start time", str(start_dateTime))
 
 # duration of Race Bank samples is 30 minutes
+# Build list of direction, Hs, T tuples
+
+dir_Hs_T = []
 
 # for every dir (0=E, 1=S, 2=W, 3=N)
+for direction_index, matrix in enumerate(hs_t_matrix_directional):
+    for T_index, T in enumerate(matrix):
+        for Hs_index, n in enumerate(T):
+            if n > orcaflex_batch.n_threshold:
+                #dir_Hs_T.append((direction_index, Hs_index, T_index, n))
+                dir_Hs_T.append((direction_index, (x_axis_directional[direction_index][Hs_index] + x_axis_directional[direction_index][Hs_index+1])/2, (y_axis_directional[direction_index][T_index] + y_axis_directional[direction_index][T_index+1])/2, n))
 
+# could have used a sparse-matrix/linked-list for all the zeroes
+
+print("dir_Hs_T: ", str(dir_Hs_T))     # diagnostic
+# (NB this matrix from matplotlib is sorta rotated)
+# rows are T; columns are Hs 
 # for every Hs
 # for every T
 # if greater than n_threshold
