@@ -88,7 +88,7 @@ print("Start time", str(start_dateTime))
 # duration of Race Bank samples is 30 minutes
 # Build list of direction, Hs, T tuples
 
-dir_Hs_T = []
+dir_Hs_T_n = []
 
 # for every dir (0=E, 1=S, 2=W, 3=N)
 for direction_index, matrix in enumerate(hs_t_matrix_directional):
@@ -96,11 +96,11 @@ for direction_index, matrix in enumerate(hs_t_matrix_directional):
         for Hs_index, n in enumerate(T):
             if n > orcaflex_batch.n_threshold:
                 #dir_Hs_T.append((direction_index, Hs_index, T_index, n))
-                dir_Hs_T.append((direction_index, (x_axis_directional[direction_index][Hs_index] + x_axis_directional[direction_index][Hs_index+1])/2, (y_axis_directional[direction_index][T_index] + y_axis_directional[direction_index][T_index+1])/2, n))
+                dir_Hs_T_n.append((direction_index, (x_axis_directional[direction_index][Hs_index] + x_axis_directional[direction_index][Hs_index+1])/2, (y_axis_directional[direction_index][T_index] + y_axis_directional[direction_index][T_index+1])/2, n))
 
 # could have used a sparse-matrix/linked-list for all the zeroes
 
-print("dir_Hs_T: ", str(dir_Hs_T))     # diagnostic
+print("dir_Hs_T_n: ", str(dir_Hs_T_n))     # diagnostic
 # (NB this matrix from matplotlib is sorta rotated)
 # rows are T; columns are Hs 
 # for every Hs
@@ -126,165 +126,220 @@ environment = model.environment
 
 # set a regular wave
 #orcaflex_batch.set_regular_wave(model, 9, 1.5, 90)
+'''
+Initialise batch counting variables
+'''
+
+
+
+damage_copper_pthies_total = 0
+damage_copper_dbeier_total = 0
+
+damage_copper_export_pthies = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
+damage_copper_export_dbeier = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
+
+'''
+Start batch simulations
+'''
+
+for  dir_Hs_T_n_tuple in dir_Hs_T_n:
+    
+    # don't bother with Python switch/case alternative
+    # set wave direction according to (wave buoy) direction filtered value
+    # for every dir (0=E, 1=S, 2=W, 3=N)
+    if dir_Hs_T_n_tuple[0] == 0:
+        dir_sim = 90
+    elif dir_Hs_T_n_tuple[0] == 1:
+        dir_sim = 180
+    elif dir_Hs_T_n_tuple[0] == 2:
+        dir_sim = 270
+    elif dir_Hs_T_n_tuple[0] == 3:
+        dir_sim = 0
+    else:
+        dir_sim = 0     # an error if not in cases! but default to 0 North
+        
+    Hs_sim = dir_Hs_T_n_tuple[1]
+    T_sim = dir_Hs_T_n_tuple[2]
+    n_sim = dir_Hs_T_n_tuple[3]
 
 # set JONSWAP irregular waves
-orcaflex_batch.set_jonswap_wave(model, 9, 1.5, 90)
+# orcaflex_batch.set_jonswap_wave(model, 9, 1.5, 90)
+    orcaflex_batch.set_jonswap_wave(model, T_sim, Hs_sim, dir_sim)
 
 
-
+    print("T_sim, Hs_sim, dir_sim: ", T_sim, Hs_sim, dir_sim)
 
 
 # print whichever wave
-orcaflex_batch.print_batch_wave_data()
-
-
-
-  
-print("Beginning statics...")
-model.CalculateStatics()                # only calculates statics
-print("Beginning simulation...")
-model.RunSimulation()
-
-'''
-model.ExtendSimulation(1800)            # run sim for extra half hour
-model.RunSimulation()
-'''
-
-completed_dateTime = datetime.now()
-
-print("Simulation completed time: " + str(completed_dateTime))
-
-
-
-
-array_cable = model["Array Cable"]
-
-orcaflex_batch.tension = array_cable.RangeGraph("Wall tension")
-print("tension: ",str(orcaflex_batch.tension))
-# https://stackoverflow.com/a/36943813/11365317
-
-# bend moment, shear forces, torsion moment, total load
-
-orcaflex_batch.bend_moment = array_cable.RangeGraph("Bend moment")
-
-print("Bend moment: ",str(orcaflex_batch.bend_moment))
-
-orcaflex_batch.shear_force = array_cable.RangeGraph("Shear force")
-
-print("Shear force: ",str(orcaflex_batch.shear_force))
-
-orcaflex_batch.worst_zz_stress = array_cable.RangeGraph("Worst ZZ stress")
-
-print("ZZ stress: ",str(orcaflex_batch.worst_zz_stress))
-
-
+    orcaflex_batch.print_batch_wave_data()
     
-finish_dateTime = datetime.now()
+    
+    
+      
+    print("Beginning statics...")
+    model.CalculateStatics()                # only calculates statics
+    print("Beginning simulation...")
+    model.RunSimulation()
+    
+    
+    model.ExtendSimulation(1800)            # run sim for extra half hour
+    model.RunSimulation()
+    
+    
+    completed_dateTime = datetime.now()
+    
+    print("Simulation completed time: " + str(completed_dateTime))
+    
+    
+    
+    
+    array_cable = model["Array Cable"]
+    
+    orcaflex_batch.tension = array_cable.RangeGraph("Wall tension")
+    print("tension: ",str(orcaflex_batch.tension))
+    # https://stackoverflow.com/a/36943813/11365317
+    
+    # bend moment, shear forces, torsion moment, total load
+    
+    orcaflex_batch.bend_moment = array_cable.RangeGraph("Bend moment")
+    
+    print("Bend moment: ",str(orcaflex_batch.bend_moment))
+    
+    orcaflex_batch.shear_force = array_cable.RangeGraph("Shear force")
+    
+    print("Shear force: ",str(orcaflex_batch.shear_force))
+    
+    orcaflex_batch.worst_zz_stress = array_cable.RangeGraph("Worst ZZ stress")
+    
+    print("ZZ stress: ",str(orcaflex_batch.worst_zz_stress))
+    
+    
+        
+    finish_dateTime = datetime.now()
+    
+    print("Finish time" + str(finish_dateTime))
+    
+    sim_duration = model.simulationStopTime - model.simulationStartTime
+    print("Simulation duration: ", str(sim_duration))
+    
+    
+    runtime_duration = finish_dateTime - start_dateTime
+    
+    print("Runtime duration: ", str(runtime_duration))
+    
+    orcaflex_batch.tension_history = np.multiply(array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations) (kN) (*1e3 to SI)
+    print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
+    
+    orcaflex_batch.bend_moment_history = np.multiply(array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations)  (kNm) (*1e3 to SI)
+    print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
+    
+    orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
+    
+    orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
+    
+    orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
+    
+    #orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1000)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI)
+    orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI - or is it - code values unlike GUI may be in SI units Nm, so * 1) 
+    
+    Cmax = orcaflex_batch.curvature_history.max()
+    #Cxmax = orcaflex_batch.curvature_history.max()
+    #Cymax = orcaflex_batch.curvature_history.max()     # max of x and y curvature components not used?
+    
+    # print all elements using list comprehension: [print (i) for i in bend_moment_history]
+    
+    # calculate tension stress concentrators
+    orcaflex_batch.tension_stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
+    orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
+    
+    orcaflex_batch.curvature_stress_concentrator_copper_1 = orcaflex_batch.Kc1(orcaflex_batch.YIELD_STRENGTH_COPPER, Cmax)
+    orcaflex_batch.curvature_stress_concentrator_steel_2 = orcaflex_batch.Kc2(orcaflex_batch.YIELD_STRENGTH_STEEL, Cmax)
+    
+    # work out second moments of area
+    orcaflex_batch.I_second_moment_x_conductor = orcaflex_batch.second_moment_area_circle(orcaflex_batch.CONDUCTOR_RADIUS)
+    orcaflex_batch.I_second_moment_x_armour = orcaflex_batch.second_moment_area_circle(orcaflex_batch.ARMOUR_RADIUS) - orcaflex_batch.I_second_moment_x_conductor
+    # may want to change to 'screen' from 'armour'
+    # subtract inner (conductor) I from outer (screen/armour) full area I
+    
+    print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
+    print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
+    print(str(orcaflex_batch.tension_stress_concentrator_steel_2))
+    
+    
+    
+    # calculate stresses over the time history    
+    orcaflex_batch.DBeier_tension_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
+    orcaflex_batch.DBeier_tension_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)
+    # TODO: supercede this
+    
+    concentrated_tension_stress_1 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
+    concentrated_tension_stress_2 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)   # Kt * T (element-wise)
+    
+    theta = 0   # (1) how do we know what angle is fatigue point location (max?) ? (2) should this be a class property?
+    
+    curvature_components = np.subtract(np.multiply(orcaflex_batch.curvature_x_history,math.sin(theta)), np.multiply(orcaflex_batch.curvature_y_history,math.cos(theta)))
+    # curvature should be the same for both conductor _1 and armour _2 ?  TODO: CHECK THIS!!
+    
+    concentrated_curvature_stress_1 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_copper_1)
+    concentrated_curvature_stress_2 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_steel_2)
+    
+    orcaflex_batch.total_stress_1 = np.add(concentrated_tension_stress_1, concentrated_curvature_stress_1)   # element-wise addition of KtT + Kc(Cx*sin(th) - Cy*cos(th))
+    orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrated_curvature_stress_2)   # element-wise addition of KtT + Kc(Cx*sin(th) - Cy*cos(th))
+    
+    
+    # load concentrated stress history into dataframes
+    orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
+    orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
+    
+    
+    conductor_y = orcaflex_batch.CABLE_OUTER_DIAMETER / 4   # conductor centres approx half way out from cable centre (from diagram)
+    
+    #PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
+    
+    PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
+    
+    # https://stackoverflow.com/a/9171196/11365317
+    
+    # D Beier and P Thies stress calcs candidates for refactoring as methods perhaps
+    
+    
+    ax = orcaflex_batch.DBeier_total_stress_copper_dataframe.plot()
+    orcaflex_batch.DBeier_total_stress_steel_dataframe.plot(ax=ax)
+    
+    
+    plt.rcParams["figure.autolayout"] = True
+    plt.show()
+    
+    
+    orcaflex_batch.read_sn_csv()            # read in SN curve data for copper and steel materials NB keep this
+    print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
+    print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
+    
+    
+    damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
+    print("(from method, for D Beier calc) Damage:", damage_copper_dbeier)
+    
+    damage_copper_pthies = orcaflex_batch.calculate_damage(PThies_stress_copper, orcaflex_batch.copper_sn)
+    print("(from method, for P Thies calc) Damage:", damage_copper_pthies)
+    
+    scaled_damage_copper_pthies = damage_copper_pthies * n_sim
+    scaled_damage_copper_dbeier = damage_copper_dbeier * n_sim
+    
+    damage_copper_pthies_total = damage_copper_pthies_total + scaled_damage_copper_pthies
+    damage_copper_dbeier_total = damage_copper_dbeier_total + scaled_damage_copper_dbeier
 
-print("Finish time" + str(finish_dateTime))
+    print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_pthies, "bringing running total P Thies damage to: ", damage_copper_pthies_total)
+    print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total P Thies damage to: ", damage_copper_dbeier_total)
+    
+    damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_pthies, damage_copper_pthies_total])
+    damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_dbeier, damage_copper_dbeier_total])
+    
+# print CSV of results
+#df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
+#df_damage_copper_export_dbeier = pd.DataFrame(damage_copper_export_dbeier)
 
-sim_duration = model.simulationStopTime - model.simulationStartTime
-print("Simulation duration: ", str(sim_duration))
-
-
-runtime_duration = finish_dateTime - start_dateTime
-
-print("Runtime duration: ", str(runtime_duration))
-
-orcaflex_batch.tension_history = np.multiply(array_cable.TimeHistory("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations) (kN) (*1e3 to SI)
-print("Time history - Wall tension: ",str(orcaflex_batch.tension_history))
-
-orcaflex_batch.bend_moment_history = np.multiply(array_cable.TimeHistory("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0.5)), 1000)    # greatest tension at 0.5 metres (from observations)  (kNm) (*1e3 to SI)
-print("Bend moment history - Wall tension: ",str(orcaflex_batch.bend_moment_history))
-
-orcaflex_batch.curvature_history = array_cable.TimeHistory("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
-
-orcaflex_batch.curvature_x_history = array_cable.TimeHistory("x curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
-
-orcaflex_batch.curvature_y_history = array_cable.TimeHistory("y curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0))    # greatest curvature at 0 metres (from observations) in rad/m (SI)
-
-#orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1000)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI)
-orcaflex_batch.x_bend_moment_history = np.multiply(array_cable.TimeHistory("x bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime),OrcFxAPI.oeArcLength(0)), 1)    # greatest (negative) bend moment at 0 metres (from observations) (kNm) (*1e3 to SI - or is it - code values unlike GUI may be in SI units Nm, so * 1) 
-
-Cmax = orcaflex_batch.curvature_history.max()
-#Cxmax = orcaflex_batch.curvature_history.max()
-#Cymax = orcaflex_batch.curvature_history.max()     # max of x and y curvature components not used?
-
-# print all elements using list comprehension: [print (i) for i in bend_moment_history]
-
-# calculate tension stress concentrators
-orcaflex_batch.tension_stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
-orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
-
-orcaflex_batch.curvature_stress_concentrator_copper_1 = orcaflex_batch.Kc1(orcaflex_batch.YIELD_STRENGTH_COPPER, Cmax)
-orcaflex_batch.curvature_stress_concentrator_steel_2 = orcaflex_batch.Kc2(orcaflex_batch.YIELD_STRENGTH_STEEL, Cmax)
-
-# work out second moments of area
-orcaflex_batch.I_second_moment_x_conductor = orcaflex_batch.second_moment_area_circle(orcaflex_batch.CONDUCTOR_RADIUS)
-orcaflex_batch.I_second_moment_x_armour = orcaflex_batch.second_moment_area_circle(orcaflex_batch.ARMOUR_RADIUS) - orcaflex_batch.I_second_moment_x_conductor
-# may want to change to 'screen' from 'armour'
-# subtract inner (conductor) I from outer (screen/armour) full area I
-
-print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
-print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
-print(str(orcaflex_batch.tension_stress_concentrator_steel_2))
-
-
-
-# calculate stresses over the time history    
-orcaflex_batch.DBeier_tension_stress_copper = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
-orcaflex_batch.DBeier_tension_stress_steel = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)
-# TODO: supercede this
-
-concentrated_tension_stress_1 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_copper_1)   # Kt * T (element-wise)
-concentrated_tension_stress_2 = np.multiply(orcaflex_batch.tension_history,orcaflex_batch.tension_stress_concentrator_steel_2)   # Kt * T (element-wise)
-
-theta = 0   # (1) how do we know what angle is fatigue point location (max?) ? (2) should this be a class property?
-
-curvature_components = np.subtract(np.multiply(orcaflex_batch.curvature_x_history,math.sin(theta)), np.multiply(orcaflex_batch.curvature_y_history,math.cos(theta)))
-# curvature should be the same for both conductor _1 and armour _2 ?  TODO: CHECK THIS!!
-
-concentrated_curvature_stress_1 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_copper_1)
-concentrated_curvature_stress_2 = np.multiply(curvature_components, orcaflex_batch.curvature_stress_concentrator_steel_2)
-
-orcaflex_batch.total_stress_1 = np.add(concentrated_tension_stress_1, concentrated_curvature_stress_1)   # element-wise addition of KtT + Kc(Cx*sin(th) - Cy*cos(th))
-orcaflex_batch.total_stress_2 = np.add(concentrated_tension_stress_2, concentrated_curvature_stress_2)   # element-wise addition of KtT + Kc(Cx*sin(th) - Cy*cos(th))
-
-
-# load concentrated stress history into dataframes
-orcaflex_batch.DBeier_total_stress_copper_dataframe = pd.DataFrame(orcaflex_batch.total_stress_1)
-orcaflex_batch.DBeier_total_stress_steel_dataframe = pd.DataFrame(orcaflex_batch.total_stress_2)
-
-
-conductor_y = orcaflex_batch.CABLE_OUTER_DIAMETER / 4   # conductor centres approx half way out from cable centre (from diagram)
-
-#PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
-
-PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
-
-# https://stackoverflow.com/a/9171196/11365317
-
-# D Beier and P Thies stress calcs candidates for refactoring as methods perhaps
-
-
-ax = orcaflex_batch.DBeier_total_stress_copper_dataframe.plot()
-orcaflex_batch.DBeier_total_stress_steel_dataframe.plot(ax=ax)
-
-
-plt.rcParams["figure.autolayout"] = True
-plt.show()
-
-
-orcaflex_batch.read_sn_csv()            # read in SN curve data for copper and steel materials NB keep this
-print("orcaflex_batch.copper_sn", str(orcaflex_batch.copper_sn))
-print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
-
-
-damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
-print("(from method, for D Beier calc) Damage:", damage_copper_dbeier)
-
-damage_copper_pthies = orcaflex_batch.calculate_damage(PThies_stress_copper, orcaflex_batch.copper_sn)
-print("(from method, for P Thies calc) Damage:", damage_copper_pthies)
+np.savetxt(damage_copper_export_pthies, "damage_results_copper_pthies.csv" , delimiter=',')
+np.savetxt(damage_copper_export_dbeier, "damage_results_copper_dbeier.csv" , delimiter=',')
 
 print("Finished")
 
