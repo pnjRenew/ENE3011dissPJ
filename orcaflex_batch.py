@@ -42,6 +42,7 @@ class OrcaFlexBatch:
         self.wave_type = None
         self.x_bins = 10
         self.y_bins = 10    # Hs:T wave sea state matrix bin edges (as integers) - could improve to decimals
+        self.n_threshold = 0    # minimum n number of sea states for which to run simulation
         return
 
     def circular_area(self, radius):

@@ -84,13 +84,16 @@ start_dateTime = datetime.now()
 
 print("Start time", str(start_dateTime))
 
-# duration of Race Bank samples is 
+# duration of Race Bank samples is 30 minutes
+
+# for every dir (0=E, 1=S, 2=W, 3=N)
 
 # for every Hs
 # for every T
-# for every dir
+# if greater than n_threshold
     # generate a wave of this Hs and T
     # run a simulation with this wave and multiply damage by the count of this Hs:T and dir
+
 
 
 for wave in model.waveComponents:
