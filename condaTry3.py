@@ -138,6 +138,8 @@ damage_copper_dbeier_total = 0
 damage_copper_export_pthies = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
 damage_copper_export_dbeier = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
 
+all_sims_start_dateTime = datetime.now()
+
 '''
 Start batch simulations
 '''
@@ -337,6 +339,15 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
 # print CSV of results
 #df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
 #df_damage_copper_export_dbeier = pd.DataFrame(damage_copper_export_dbeier)
+
+all_sims_finish_dateTime = datetime.now()
+
+print("Overall Finish time" + str(all_sims_finish_dateTime))
+
+
+all_sims_runtime_duration = all_sims_finish_dateTime - all_sims_start_dateTime
+
+print("Runtime duration: ", str(all_sims_runtime_duration))
 
 np.savetxt(damage_copper_export_pthies, "damage_results_copper_pthies.csv" , delimiter=',')
 np.savetxt(damage_copper_export_dbeier, "damage_results_copper_dbeier.csv" , delimiter=',')
