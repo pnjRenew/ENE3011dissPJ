@@ -171,7 +171,7 @@ class OrcaFlexBatch:
         dir_Hs_T_filtered[0] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
         dir_Hs_T_filtered[1] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
         dir_Hs_T_filtered[2] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
-        dir_Hs_T_filtered[3] = df.loc[ (45 <= df['mdir']) &  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+        dir_Hs_T_filtered[3] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
         
         # also read direction, and return array of dataframes binned by direction
         
