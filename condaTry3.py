@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import rawdatx.read_TOA5 as read_raw_data
 import rawdatx.process_XML as process_XML
 import xlsxwriter
+import csv
 #import spurioussadgjhasgdjasgd
 
 import orcaflex_batch
@@ -96,11 +97,14 @@ for direction_index, matrix in enumerate(hs_t_matrix_directional):
         for Hs_index, n in enumerate(T):
             if n > orcaflex_batch.n_threshold:
                 #dir_Hs_T.append((direction_index, Hs_index, T_index, n))
-                dir_Hs_T_n.append((direction_index, (x_axis_directional[direction_index][Hs_index] + x_axis_directional[direction_index][Hs_index+1])/2, (y_axis_directional[direction_index][T_index] + y_axis_directional[direction_index][T_index+1])/2, n))
+                dir_Hs_T_n.append((direction_index, (x_axis_directional[direction_index][Hs_index] + x_axis_directional[direction_index][Hs_index+1])/2, (y_axis_directional[direction_index][T_index] + y_axis_directional[direction_index][T_index+1])/2, n)) # add direction, Hs:T & n data as tuple
 
 # could have used a sparse-matrix/linked-list for all the zeroes
 
 print("dir_Hs_T_n: ", str(dir_Hs_T_n))     # diagnostic
+
+
+np.savetxt('directional_Hs_T_pairs.csv', dir_Hs_T_n, fmt= '%d', delimiter=',', header="dir,Hs,Tm02,n")
 # (NB this matrix from matplotlib is sorta rotated)
 # rows are T; columns are Hs 
 # for every Hs
@@ -138,7 +142,22 @@ damage_copper_dbeier_total = 0
 damage_copper_export_pthies = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
 damage_copper_export_dbeier = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
 
+# overwrite any existing damage record file of this name
+with open('damage_results_copper_pthies.csv', 'w', newline='') as csvfile:
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
+    writer = csv.DictWriter(csvfile, fieldnames = field_names)
+    writer.writeheader()
+
+with open('damage_results_copper_dbeier.csv', 'w', newline='') as csvfile:
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
+    writer = csv.DictWriter(csvfile, fieldnames = field_names)
+    writer.writeheader()
+    # because using 'with', the file is closed, don't worry
+
+
 all_sims_start_dateTime = datetime.now()
+
+
 
 '''
 Start batch simulations
@@ -183,16 +202,16 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     print("Beginning simulation...")
     model.RunSimulation()
     
-    
+   
     model.ExtendSimulation(1800)            # run sim for extra half hour
-    model.RunSimulation()
-    
+    #model.RunSimulation()
+
     
     completed_dateTime = datetime.now()
     
     print("Simulation completed time: " + str(completed_dateTime))
     
-    
+    model.SaveSimulation("./simfiles/BatchSimulation-" + str(Hs_sim) + "m_" + str(T_sim) + "s_" + str(n_sim) + "n_" + str(dir_sim) + "dir" + "_" + all_sims_start_dateTime.strftime("%H-%M-%S_%d-%m-%Y") + ".sim")
     
     
     array_cable = model["Array Cable"]
@@ -331,10 +350,21 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     damage_copper_dbeier_total = damage_copper_dbeier_total + scaled_damage_copper_dbeier
 
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_pthies, "bringing running total P Thies damage to: ", damage_copper_pthies_total)
-    print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total P Thies damage to: ", damage_copper_dbeier_total)
+    print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_dbeier,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total D Beier damage to: ", damage_copper_dbeier_total)
     
     damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_pthies, damage_copper_pthies_total])
-    damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_dbeier, damage_copper_dbeier_total])
+    damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_dbeier, scaled_damage_copper_dbeier, damage_copper_dbeier_total])
+    
+    with open('damage_results_copper_pthies.csv', 'a', newline='') as csvfile:
+        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
+        writer = csv.DictWriter(csvfile, fieldnames = field_names)
+        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'damage_copper_pthies' : damage_copper_pthies, 'scaled_damage_copper_pthies' : scaled_damage_copper_pthies, 'damage_copper_pthies_total' : damage_copper_pthies_total})
+
+    with open('damage_results_copper_dbeier.csv', 'a', newline='') as csvfile:
+        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
+        writer = csv.DictWriter(csvfile, fieldnames = field_names)
+        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'damage_copper_dbeier' : damage_copper_dbeier, 'scaled_damage_copper_dbeier' : scaled_damage_copper_dbeier, 'damage_copper_dbeier_total' : damage_copper_dbeier_total})
+        # because using 'with', the file is closed, don't worry
     
 # print CSV of results
 #df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
