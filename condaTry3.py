@@ -202,10 +202,11 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     print("Beginning simulation...")
     model.RunSimulation()
     
-   
-    model.ExtendSimulation(1800)            # run sim for extra half hour
-    #model.RunSimulation()
-
+    sim_duration = model.simulationStopTime - model.simulationStartTime
+    if sim_duration < 1800:                     # set to an extra half-hour only if not already extended
+        model.ExtendSimulation(1800)            # run sim for extra half hour
+        model.RunSimulation()                   # now run the simulation for that extended time too
+    # TODO - alter model file to make this unnecessary
     
     completed_dateTime = datetime.now()
     

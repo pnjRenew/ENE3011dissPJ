@@ -154,3 +154,4 @@ cython_debug/
 
 # pnj additions
 .sim
+*.sim
