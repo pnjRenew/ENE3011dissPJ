@@ -118,11 +118,17 @@ np.savetxt('directional_Hs_T_pairs.csv', dir_Hs_T_n, fmt= '%d', delimiter=',', h
 for wave in model.waveComponents:
     print (wave)
 
-model.SaveWaveSearchSpreadsheet("wavesearch1.xls")
+#model.SaveWaveSearchSpreadsheet("wavesearch1.xls")
 
 #model.SaveSimulation("AutomatedPJ1.sim")
 
 # https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythoninterface,Objectdata.htm
+
+# try setting the depth of the model, different from GUI setup
+#model["Environment"].WaterDepth = 10.0
+#model.environment.WaterDepth = 10.0     # try shallow water
+# NB TODO !!! DO NOT LEAVE SET TO SHALLOW/DEEP DEPTH
+
 
 environment = model.environment
 
@@ -130,6 +136,11 @@ environment = model.environment
 
 # set a regular wave
 #orcaflex_batch.set_regular_wave(model, 9, 1.5, 90)
+
+
+
+
+
 '''
 Initialise batch counting variables
 '''
@@ -138,9 +149,12 @@ Initialise batch counting variables
 
 damage_copper_pthies_total = 0
 damage_copper_dbeier_total = 0
+damage_steel_dbeier_total = 0
+
 
 damage_copper_export_pthies = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
 damage_copper_export_dbeier = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_dbeier", "scaled_damage_copper_dbeier", "damage_copper_dbeier_total"]
+damage_steel_export_dbeier = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_steel_dbeier", "scaled_damage_steel_dbeier", "damage_steel_dbeier_total"]
 
 # overwrite any existing damage record file of this name
 with open('damage_results_copper_pthies.csv', 'w', newline='') as csvfile:
@@ -154,6 +168,11 @@ with open('damage_results_copper_dbeier.csv', 'w', newline='') as csvfile:
     writer.writeheader()
     # because using 'with', the file is closed, don't worry
 
+with open('damage_results_steel_dbeier.csv', 'w', newline='') as csvfile:
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_steel_dbeier", "scaled_damage_steel_dbeier", "damage_steel_dbeier_total"]
+    writer = csv.DictWriter(csvfile, fieldnames = field_names)
+    writer.writeheader()
+    # because using 'with', the file is closed, don't worry
 
 all_sims_start_dateTime = datetime.now()
 
@@ -270,6 +289,10 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     
     # print all elements using list comprehension: [print (i) for i in bend_moment_history]
     
+    '''
+    Stress concentrator calculations
+    '''    
+    
     # calculate tension stress concentrators
     orcaflex_batch.tension_stress_concentrator_copper_1 = orcaflex_batch.Kt1(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
     orcaflex_batch.tension_stress_concentrator_steel_2 = orcaflex_batch.Kt2(orcaflex_batch.CONDUCTOR_AREA, orcaflex_batch.ARMOUR_AREA, orcaflex_batch.MODULUS_COPPER, orcaflex_batch.MODULUS_STEEL)
@@ -282,6 +305,11 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     orcaflex_batch.I_second_moment_x_armour = orcaflex_batch.second_moment_area_circle(orcaflex_batch.ARMOUR_RADIUS) - orcaflex_batch.I_second_moment_x_conductor
     # may want to change to 'screen' from 'armour'
     # subtract inner (conductor) I from outer (screen/armour) full area I
+    
+    
+    '''
+    Stress calculations
+    '''    
     
     print('Stress concentrator values \n copper: \t%f \nsteel: \t%f '%(orcaflex_batch.tension_stress_concentrator_copper_1,orcaflex_batch.tension_stress_concentrator_steel_2))
     print(str(orcaflex_batch.tension_stress_concentrator_copper_1))
@@ -338,23 +366,43 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     print("orcaflex_batch_steel_sn", str(orcaflex_batch.steel_sn))
     
     
-    damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn)
+    '''
+    Damage functions call
+    '''
+    
+    
+    damage_copper_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_1, orcaflex_batch.copper_sn, orcaflex_batch.FATIGUE_LIMIT_COPPER_NOMINAL)
     print("(from method, for D Beier calc) Damage:", damage_copper_dbeier)
     
-    damage_copper_pthies = orcaflex_batch.calculate_damage(PThies_stress_copper, orcaflex_batch.copper_sn)
+    damage_copper_pthies = orcaflex_batch.calculate_damage(PThies_stress_copper, orcaflex_batch.copper_sn, orcaflex_batch.FATIGUE_LIMIT_COPPER_NOMINAL)
     print("(from method, for P Thies calc) Damage:", damage_copper_pthies)
+    
+    damage_steel_dbeier = orcaflex_batch.calculate_damage(orcaflex_batch.total_stress_2, orcaflex_batch.steel_sn, orcaflex_batch.FATIGUE_LIMIT_STEEL)
+    print("(from method, for D BEeier (steel) calc) Damage:", damage_steel_dbeier)
     
     scaled_damage_copper_pthies = damage_copper_pthies * n_sim
     scaled_damage_copper_dbeier = damage_copper_dbeier * n_sim
     
+    scaled_damage_steel_dbeier = damage_steel_dbeier * n_sim
+    
+    
     damage_copper_pthies_total = damage_copper_pthies_total + scaled_damage_copper_pthies
     damage_copper_dbeier_total = damage_copper_dbeier_total + scaled_damage_copper_dbeier
+    
+    damage_steel_dbeier_total = damage_steel_dbeier_total + scaled_damage_steel_dbeier
 
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_pthies, "bringing running total P Thies damage to: ", damage_copper_pthies_total)
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_dbeier,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total D Beier damage to: ", damage_copper_dbeier_total)
     
     damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_pthies, damage_copper_pthies_total])
     damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_dbeier, scaled_damage_copper_dbeier, damage_copper_dbeier_total])
+    
+    damage_steel_export_dbeier.append([Hs_sim, T_sim, dir_sim, n_sim, damage_steel_dbeier, scaled_damage_steel_dbeier, damage_steel_dbeier_total])
+    
+    
+    '''
+    Write outputs to file (wrap things up)
+    '''    
     
     with open('damage_results_copper_pthies.csv', 'a', newline='') as csvfile:
         field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_copper_pthies", "scaled_damage_copper_pthies", "damage_copper_pthies_total"]
@@ -367,6 +415,12 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
         writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'damage_copper_dbeier' : damage_copper_dbeier, 'scaled_damage_copper_dbeier' : scaled_damage_copper_dbeier, 'damage_copper_dbeier_total' : damage_copper_dbeier_total})
         # because using 'with', the file is closed, don't worry
     
+    with open('damage_results_steel_dbeier.csv', 'a', newline='') as csvfile:
+        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_steel_dbeier", "scaled_damage_steel_dbeier", "damage_steel_dbeier_total"]
+        writer = csv.DictWriter(csvfile, fieldnames = field_names)
+        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'damage_steel_dbeier' : damage_steel_dbeier, 'scaled_damage_steel_dbeier' : scaled_damage_steel_dbeier, 'damage_steel_dbeier_total' : damage_steel_dbeier_total})
+        # because using 'with', the file is closed, don't worry
+
 # print CSV of results
 #df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
 #df_damage_copper_export_dbeier = pd.DataFrame(damage_copper_export_dbeier)
@@ -380,8 +434,10 @@ all_sims_runtime_duration = all_sims_finish_dateTime - all_sims_start_dateTime
 
 print("Runtime duration: ", str(all_sims_runtime_duration))
 
-np.savetxt(damage_copper_export_pthies, "damage_results_copper_pthies.csv" , delimiter=',')
-np.savetxt(damage_copper_export_dbeier, "damage_results_copper_dbeier.csv" , delimiter=',')
+np.savetxt( "damage_results_copper_pthies.csv" ,damage_copper_export_pthies, delimiter=',')
+np.savetxt( "damage_results_copper_dbeier.csv" ,damage_copper_export_dbeier, delimiter=',')
+
+np.savetxt( "damage_results_steel_dbeier.csv" ,damage_steel_export_dbeier, delimiter=',')
 
 print("Finished")
 

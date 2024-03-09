@@ -23,6 +23,8 @@ class OrcaFlexBatch:
         self.MODULUS_STEEL = 110e9            # E2
         self.YIELD_STRENGTH_COPPER = 33e6     # Y1
         self.YIELD_STRENGTH_STEEL = 100e6     # Y2 data from web pages mostly (!) - could alter
+        self.FATIGUE_LIMIT_COPPER_NOMINAL = 1   # no fatigue limit for copper
+        self.FATIGUE_LIMIT_STEEL = 600e6      # 600 MPa fatigue limit for steel
         
         self.CONDUCTOR_RADIUS = 0.00725  # from a 14.5mm conductor (150mm^2)
         #self.ARMOUR_RADIUS = 0.0545      # 109.6mm overall outside diameter (150mm^2)
@@ -137,7 +139,7 @@ class OrcaFlexBatch:
         self.copper_sn = pd.read_csv("Copper SN - NS.csv").values.tolist()
         self.steel_sn = pd.read_csv("Steel SN - NS.csv").values.tolist()
         
-    def calculate_damage(self, stress_time_series, material_sn):        # .orcaflex_batch.total_stress_1
+    def calculate_damage(self, stress_time_series, material_sn, material_fatigue_limit):        # .orcaflex_batch.total_stress_1
     
         print("material_sn", str(material_sn))
     
@@ -145,7 +147,7 @@ class OrcaFlexBatch:
         print("rainflow_count_material ", str(rainflow_count_material))
     
         # minerDamageModelClassic(lccData, snData, fatigueLimit)     fatigueLimit 100?
-        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, 1)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, material_fatigue_limit)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
         print("material_mp_damage ", str(mp_damage))
         return mp_damage
 
