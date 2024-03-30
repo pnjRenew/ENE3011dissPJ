@@ -36,6 +36,7 @@ class OrcaFlexBatch:
         
         self.CABLE_OUTER_DIAMETER = 0.1096
         
+        self.CABLE_MINIMUM_BENDING_RADIUS = 1.14    # (150mm^2) from data sheet
         
         # for 12 MW turbine, I=P/V=12e6/36e3 = 333.34A 
         # nearest is 342A in 150mm^2 conductor cable (Nexans 2019 4.5.4)
@@ -65,12 +66,16 @@ class OrcaFlexBatch:
         Kt2 = 1/((A1*(E2/E1)) + A2)
         return Kt2
 
-    def Kc1(self, Y1, Cmax):
-        Kc1 = Y1/Cmax
+    #def Kc1(self, Y1, Cmax):
+    def Kc1(self, Y1):
+        #Kc1 = Y1/Cmax
+        Kc1 = Y1 / self.CABLE_MINIMUM_BENDING_RADIUS
         return Kc1
     
-    def Kc2(self, Y2, Cmax):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
-        Kc2 = Y2/Cmax
+    #def Kc2(self, Y2, Cmax):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
+    def Kc2(self, Y2):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
+        #Kc2 = Y2/Cmax
+        Kc2 = Y2 / self.CABLE_MINIMUM_BENDING_RADIUS
         return Kc2
     
 
