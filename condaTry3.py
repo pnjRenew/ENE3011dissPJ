@@ -169,7 +169,13 @@ with open('damage_results_copper_dbeier.csv', 'w', newline='') as csvfile:
     # because using 'with', the file is closed, don't worry
 
 with open('damage_results_steel_dbeier.csv', 'w', newline='') as csvfile:
-    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_steel_dbeier", "scaled_damage_steel_dbeier", "damage_steel_dbeier_total"]
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "damage_steel_dbeier", "scaled_damage_steel_dbeier", "damage_steel_dbeier_total"]    
+    writer = csv.DictWriter(csvfile, fieldnames = field_names)
+    writer.writeheader()
+    # because using 'with', the file is closed, don't worry
+
+with open('cable_simulation_results.csv', 'w', newline='') as csvfile:
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y"]
     writer = csv.DictWriter(csvfile, fieldnames = field_names)
     writer.writeheader()
     # because using 'with', the file is closed, don't worry
@@ -255,6 +261,9 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     print("ZZ stress: ",str(orcaflex_batch.worst_zz_stress))
     
     
+    
+    
+    
         
     finish_dateTime = datetime.now()
     
@@ -286,6 +295,12 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     Cmax = orcaflex_batch.curvature_history.max()
     #Cxmax = orcaflex_batch.curvature_history.max()
     #Cymax = orcaflex_batch.curvature_history.max()     # max of x and y curvature components not used?
+    
+    
+    dyn_y = array_cable.RangeGraph("Dynamic y", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime)).Max    
+    dyn_y_df = pd.DataFrame(dyn_y)      # get maximum y (horizontal transverse to cable) movement for this cable
+    dyn_y_json = dyn_y_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
+    
     
     # print all elements using list comprehension: [print (i) for i in bend_moment_history]
     
@@ -425,6 +440,12 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
         writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'damage_steel_dbeier' : damage_steel_dbeier, 'scaled_damage_steel_dbeier' : scaled_damage_steel_dbeier, 'damage_steel_dbeier_total' : damage_steel_dbeier_total})
         # because using 'with', the file is closed, don't worry
 
+    with open('cable_simulation_results.csv', 'a', newline='') as csvfile:
+        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y"]
+        writer = csv.DictWriter(csvfile, fieldnames = field_names)
+        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'dyn_y' : dyn_y_json})
+        # because using 'with', the file is closed, don't worry
+
 # print CSV of results
 #df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
 #df_damage_copper_export_dbeier = pd.DataFrame(damage_copper_export_dbeier)
@@ -438,10 +459,10 @@ all_sims_runtime_duration = all_sims_finish_dateTime - all_sims_start_dateTime
 
 print("Runtime duration: ", str(all_sims_runtime_duration))
 
-np.savetxt( "damage_results_copper_pthies.csv" ,damage_copper_export_pthies, delimiter=',')
-np.savetxt( "damage_results_copper_dbeier.csv" ,damage_copper_export_dbeier, delimiter=',')
+#np.savetxt( "damage_results_copper_pthies.csv" ,damage_copper_export_pthies, delimiter=',')
+#np.savetxt( "damage_results_copper_dbeier.csv" ,damage_copper_export_dbeier, delimiter=',')
 
-np.savetxt( "damage_results_steel_dbeier.csv" ,damage_steel_export_dbeier, delimiter=',')
+#np.savetxt( "damage_results_steel_dbeier.csv" ,damage_steel_export_dbeier, delimiter=',')
 
 print("Finished")
 
