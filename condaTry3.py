@@ -175,7 +175,7 @@ with open('damage_results_steel_dbeier.csv', 'w', newline='') as csvfile:
     # because using 'with', the file is closed, don't worry
 
 with open('cable_simulation_results.csv', 'w', newline='') as csvfile:
-    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y"]
+    field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y", "zz_stress", "bend_moment", "tension", "curvature"]
     writer = csv.DictWriter(csvfile, fieldnames = field_names)
     writer.writeheader()
     # because using 'with', the file is closed, don't worry
@@ -301,6 +301,21 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     dyn_y_df = pd.DataFrame(dyn_y)      # get maximum y (horizontal transverse to cable) movement for this cable
     dyn_y_json = dyn_y_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
     
+    zz_stress = array_cable.RangeGraph("Worst ZZ stress", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime)).Max
+    zz_stress_df = pd.DataFrame(zz_stress)      # get maximum "worst" ZZ i.e. axial stress
+    zz_stress_json = zz_stress_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
+    
+    bend_moment = array_cable.RangeGraph("Bend moment", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime)).Max
+    bend_moment_df = pd.DataFrame(bend_moment)      # get maximum bend moment along cable sections/"arc lengths" through all simulation
+    bend_moment_json = bend_moment_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
+    
+    tension = array_cable.RangeGraph("Wall tension", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime)).Max
+    tension_df = pd.DataFrame(tension)      # get maximum tension throughout simulation throughout cable
+    tension_json = tension_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
+    
+    curvature = array_cable.RangeGraph("Curvature", OrcFxAPI.SpecifiedPeriod(model.simulationStartTime,model.simulationStopTime)).Max
+    curvature_df = pd.DataFrame(curvature)      # get maximum curvature
+    curvature_json = curvature_df.to_json()     # write to JSON string to fit in 1 column in saved CSV
     
     # print all elements using list comprehension: [print (i) for i in bend_moment_history]
     
@@ -441,9 +456,9 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
         # because using 'with', the file is closed, don't worry
 
     with open('cable_simulation_results.csv', 'a', newline='') as csvfile:
-        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y"]
+        field_names = ["Hs_sim", "T_sim", "dir_sim", "n_sim", "dyn_y", "zz_stress", "bend_moment", "tension", "curvature"]
         writer = csv.DictWriter(csvfile, fieldnames = field_names)
-        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'dyn_y' : dyn_y_json})
+        writer.writerow({'Hs_sim' : Hs_sim, 'T_sim' : T_sim, 'dir_sim' : dir_sim, 'n_sim' : n_sim, 'dyn_y' : dyn_y_json, 'zz_stress' : zz_stress_json, 'bend_moment' : bend_moment_json, 'tension' : tension_json, 'curvature' : curvature_json})
         # because using 'with', the file is closed, don't worry
 
 # print CSV of results

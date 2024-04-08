@@ -1,13 +1,17 @@
-clear all
+function graphs = cable_json_graphs(column_number, title_string, title_substring_1, title_substring_2, x_label_string, y_label_string, y_minimum, y_maximum)
+
+%clear all
 close all
 
-column_number = 3
-title_string = 'Lateral displacement (y) along cable arc length'
-title_substring_1 = "Wave direction: "
-title_substring_2 = "° vs max lateral (y) displacement"
-x_label_string = 'Displacement (m)'
-y_label_string ='Along arc length (m)'
-y_maximum = 5
+% column_number = 3
+% title_string = 'Lateral displacement (y) along cable arc length'
+% title_substring_1 = "Wave direction: "
+% title_substring_2 = "° vs max lateral (y) displacement"
+% x_label_string = 'Displacement (m)'
+% y_label_string ='Along arc length (m)'
+% y_maximum = 5
+
+direction_column_number = 3
 
 % NB xlsread is supposed to be deprecated
 %[cable2, cable3, cable4]=xlsread("cable_simulation_results - Copy (2).csv")
@@ -22,7 +26,7 @@ figures = []
 numRows = length(numA)
 
 for i = 2: numRows+1    % decode all of the JSON for OF RangeGraph data
-    json_array(i-1) = jsondecode(cell2mat(cable4(i,5)))
+    json_array(i-1) = jsondecode(cell2mat(cable4(i,column_number)))
 end
 % JSON data going into a separate array of structs
 
@@ -32,7 +36,7 @@ for i = 1: length(directions)
 
 % use logical indexing to produce a separate figure for each direction
 % direction is in column 3 (Hs in 1, T in 2, n in 4)
-cable_direction_idx = (numA(:,column_number) == directions(i))  % one direction at a time
+cable_direction_idx = (numA(:,direction_column_number) == directions(i))  % one direction at a time
 numA_filtered = numA(cable_direction_idx,:)         % filter numeric and JSON tables
 cable_direction_idx_t = cable_direction_idx'
 json_array_filtered = json_array(cable_direction_idx_t) % transpose index to fit
@@ -43,7 +47,7 @@ json_array_filtered = json_array(cable_direction_idx_t) % transpose index to fit
     t = title(title_string)
     xl = xlabel(x_label_string)
     yl = ylabel(y_label_string)
-    ylim([0 y_maximum])
+    ylim([y_minimum y_maximum])
 
     numRows = length(numA_filtered)
     % FOR USE WHEN FILTERED to ONE DIRECTION WITH LOGICAL INDEX 
@@ -95,3 +99,5 @@ json_array_filtered = json_array(cable_direction_idx_t) % transpose index to fit
     title_string = strrep(title_string, "°","")
     saveas(figures(i), title_string + ".png")
 end
+
+graphs = figures
