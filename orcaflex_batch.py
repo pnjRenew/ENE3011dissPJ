@@ -116,6 +116,8 @@ class OrcaFlexBatch:
             environment.WaveHs = wave_hs  # pj:5
             self.wave_hs = environment.WaveHeight  # m
             print ("Hs: " + str(self.wave_hs))
+            environment.WaveTp = wave_period
+            self.wave_tp = wave_period
             self.wave_type = "JONSWAP"     # maybe set above from environment?
             return
     

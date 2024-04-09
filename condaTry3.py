@@ -425,6 +425,7 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     
     damage_steel_dbeier_total = damage_steel_dbeier_total + scaled_damage_steel_dbeier
 
+    # ought really to change this to print environment values, including Tp
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_pthies, "bringing running total P Thies damage to: ", damage_copper_pthies_total)
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_dbeier,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total D Beier damage to: ", damage_copper_dbeier_total)
     
