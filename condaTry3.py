@@ -21,8 +21,9 @@ import orcaflex_batch
 
 orcaflex_batch = orcaflex_batch.OrcaFlexBatch()
 
-model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
-model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
+#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
+#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
+model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - no current.sim")
 
 
 #orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
@@ -194,7 +195,7 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     # set wave direction according to (wave buoy) direction filtered value
     # for every dir (0=E, 1=S, 2=W, 3=N)
     if dir_Hs_T_n_tuple[0] == 0:
-        dir_sim = 90
+        dir_sim = 90  
     elif dir_Hs_T_n_tuple[0] == 1:
         dir_sim = 180
     elif dir_Hs_T_n_tuple[0] == 2:
@@ -380,7 +381,11 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     
     #PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
     
-    PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
+    #PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
+    # after removing current, where "x bend moment" became zero at the point (all points) when waves aliged,
+    # change to using overall "bend moment"
+    PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
+    
     
     # https://stackoverflow.com/a/9171196/11365317
     

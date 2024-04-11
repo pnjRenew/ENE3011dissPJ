@@ -154,7 +154,16 @@ class OrcaFlexBatch:
         print("rainflow_count_material ", str(rainflow_count_material))
     
         # minerDamageModelClassic(lccData, snData, fatigueLimit)     fatigueLimit 100?
-        mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material, material_sn, material_fatigue_limit)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+        
+        # need to filter out (list comprehension) any range == 0 from [range count] from astmRainFlowCounting       
+        rainflow_count_material_filtered = [rfc for rfc in rainflow_count_material if rfc[0] > 0]
+        # ... but this may leave len(np.array(rainflow_count_material_filtered).shape) as 1 (not 2), causing an error
+        # so catch any ValueError and set this damage to zero
+        try:
+            mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material_filtered, material_sn, material_fatigue_limit)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
+        except ValueError as e:
+            print(str(e))   # print error message anyhow
+            mp_damage = 0   # ... and set damage to zero (may well be)
         print("material_mp_damage ", str(mp_damage))
         return mp_damage
 
