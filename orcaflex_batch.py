@@ -116,8 +116,10 @@ class OrcaFlexBatch:
             environment.WaveHs = wave_hs  # pj:5
             self.wave_hs = environment.WaveHeight  # m
             print ("Hs: " + str(self.wave_hs))
-            environment.WaveTp = wave_period
-            self.wave_tp = wave_period
+            # environment.WaveTp = wave_period # this line if setting Tp
+            environment.WaveTz = wave_period
+            #self.wave_tp = wave_period
+            self.wave_tz = wave_period
             self.wave_type = "JONSWAP"     # maybe set above from environment?
             return
     
@@ -187,10 +189,27 @@ class OrcaFlexBatch:
         
         
         dir_Hs_T_filtered = [None] * 4      # set up the list to be populated by direction filtered Hs:T
-        dir_Hs_T_filtered[0] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
-        dir_Hs_T_filtered[1] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
-        dir_Hs_T_filtered[2] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
-        dir_Hs_T_filtered[3] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+        # dir_Hs_T_filtered[0] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
+        # dir_Hs_T_filtered[1] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
+        # dir_Hs_T_filtered[2] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
+        # dir_Hs_T_filtered[3] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+
+# NB THE BELOW IS 'CORRECT' FOR MAGNETIC NORTH = 0°
+
+        # dir_Hs_T_filtered[0] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+        # dir_Hs_T_filtered[1] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
+        # dir_Hs_T_filtered[2] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
+        # dir_Hs_T_filtered[3] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
+
+
+# 3et's try going for diagonals 18-4-24
+
+        dir_Hs_T_filtered[0] = df.loc[ (90 >= df['mdir']) &  (df['mdir']  > 0)]  # between N and E (i.e. NE)
+        dir_Hs_T_filtered[1] = df.loc[ (180 >= df['mdir']) &  (df['mdir'] > 90)]  # between E and S (i.e. SE)
+        dir_Hs_T_filtered[2] = df.loc[ (270 >= df['mdir']) &  (df['mdir']  > 180)]  # between S and W (i.e. SW)
+        dir_Hs_T_filtered[3] = df.loc[ (360 >= df['mdir']) &  (df['mdir']  > 270)]  # between N and W (i.e. NW)
+# delete this if no good!
+
         
         # also read direction, and return array of dataframes binned by direction
         

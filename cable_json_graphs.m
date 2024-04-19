@@ -1,4 +1,16 @@
-function graphs = cable_json_graphs(column_number, title_string, title_substring_1, title_substring_2, x_label_string, y_label_string, y_minimum, y_maximum)
+function graphs = cable_json_graphs(column_number, title_string, title_substring_1, title_substring_2, x_label_string, y_label_string, y_minimum, y_maximum, legend_position)
+
+arguments
+    column_number
+    title_string
+    title_substring_1
+    title_substring_2
+    x_label_string
+    y_label_string
+    y_minimum
+    y_maximum
+    legend_position = "best"        % optional/default parameter
+end
 
 %clear all
 close all
@@ -30,7 +42,9 @@ for i = 2: numRows+1    % decode all of the JSON for OF RangeGraph data
 end
 % JSON data going into a separate array of structs
 
-directions = [90, 180, 270, 0]
+%directions = [90, 180, 270, 0]
+directions = [45, 135, 225, 315]  % diagonal directions
+
 
 for i = 1: length(directions)
 
@@ -55,8 +69,8 @@ json_array_filtered = json_array(cable_direction_idx_t) % transpose index to fit
     legend_strings = {}     % empty cell array to reset
 
     for j = 1:numRows
-        legend_string = strcat("Hs:",string(numA_filtered(j,1)),"(m), T:",string(numA_filtered(j,2)),"(s)")
-        %legend_string = ["Hs:",string(numA_filtered(j,1)),"(m), T:",string(numA_filtered(j,2)),"(s)"]
+        legend_string = strcat("Hs:",string(numA_filtered(j,1)),"(m), Tp:",string(numA_filtered(j,2)),"(s)")
+        %legend_string = ["Hs:",string(numA_filtered(j,1)),"(m), Tp:",string(numA_filtered(j,2)),"(s)"]
         legend_strings{j} = strcat("",legend_string)    % in case the above is blank
         plot_points = []    % reset/initialise array of data points
     % https://uk.mathworks.com/matlabcentral/answers/341454-how-to-loop-over-the-structure-fields-and-get-the-type-of-data#answer_268006
@@ -89,12 +103,15 @@ json_array_filtered = json_array(cable_direction_idx_t) % transpose index to fit
 
     end     % for each direction
     title_string = title_substring_1 + string(directions(i) + title_substring_2)
-    title(title_string)
+    %%%%title(title_string)
+    % NB - removing title for thesis style reasons!
+    title('')   % blank title on plot (no duplicate titles) (for thesis style reasons!)
     if length(legend_strings) == 0
         legend_strings{1} = ""      % blank string if otherwise empty legend
     end
-    legend(legend_strings)    
+    legend(legend_strings, 'Location', legend_position)    
     hold off
+    grid on
     title_string = strrep(title_string, ":","")     % remove colon (path symbol) from filename
     title_string = strrep(title_string, "°","")
     saveas(figures(i), title_string + ".png")

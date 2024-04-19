@@ -24,13 +24,18 @@ orcaflex_batch = orcaflex_batch.OrcaFlexBatch()
 #model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 60 minutes.sim")
 #model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m.sim")
 model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - no current.sim")
-
+#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 0.7 current.sim")
+#model = OrcFxAPI.Model(r"C:\Users\pnj201\OneDrive - University of Exeter\3011 diss\coding copy of B Wotton material\TEST 1 - 30m\Subsea Cable 30m - 0.4 current.sim")
 
 #orcaflex_batch.read_wave_TOA5() # leave for the moment - ValueError: Object arrays cannot be loaded when allow_pickle=False
 hs_t_df = orcaflex_batch.read_Hs_T()        # Hs and T in a dataframe
 #hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["Tm02_Avg"].values.tolist(), hs_t_df["Hm0_Avg"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 
+
+# below line for using tm02 for Tz
 hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tm02"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+# below line for using tp for Tp
+#hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tp"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 # hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
 # element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
 
@@ -61,9 +66,23 @@ x_axis_directional = []
 y_axis_directional = []
 quad_mesh_directional = []
 hs_t_matrix_rotated_directional = []
+individual_damage_scatter_table_dbeier = np.zeros((4,10,10))
+scaled_damage_scatter_table_dbeier = np.zeros((4,10,10))
+individual_damage_scatter_table_pthies = np.zeros((4,10,10))
+scaled_damage_scatter_table_pthies = np.zeros((4,10,10))
+df_individual_damage_scatter_table_dbeier = np.zeros((4))
+df_scaled_damage_scatter_table_dbeier = np.zeros((4))
+df_individual_damage_scatter_table_pthies = np.zeros((4))
+df_scaled_damage_scatter_table_pthies = np.zeros((4))
+
+
+
 
 for i, hs_t_df in enumerate(hs_t_df_list):        # TODO: do this more pythonically
+    # line below for using tm02 for Tz    
     hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tm02"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
+    # line below for using tp for Tp    
+    #hs_t_matrix, x_axis, y_axis, quad_mesh  = plt.hist2d(hs_t_df["tp"].values.tolist(), hs_t_df["hm0"].values.tolist(), [range(orcaflex_batch.x_bins+1), range(orcaflex_batch.y_bins+1)])    # plot 2D matrix, using e.g. 10x10, save matrix values
 
 # hs_t_matrix = (hs_t_matrix/hs_t_matrix.max()) # possibly unnecessary normalisation - and could use density parameter
 # element 0 is 2x2 matrix, 1 and 2 are axes/bins, 3 is the QuadMesh
@@ -104,8 +123,10 @@ for direction_index, matrix in enumerate(hs_t_matrix_directional):
 
 print("dir_Hs_T_n: ", str(dir_Hs_T_n))     # diagnostic
 
-
+    # line below for using tm02 for Tz    
 np.savetxt('directional_Hs_T_pairs.csv', dir_Hs_T_n, fmt= '%d', delimiter=',', header="dir,Hs,Tm02,n")
+        # line below for using tp for Tp    
+#np.savetxt('directional_Hs_T_pairs.csv', dir_Hs_T_n, fmt= '%d', delimiter=',', header="dir,Hs,Tp,n")
 # (NB this matrix from matplotlib is sorta rotated)
 # rows are T; columns are Hs 
 # for every Hs
@@ -189,21 +210,37 @@ all_sims_start_dateTime = datetime.now()
 Start batch simulations
 '''
 
+# matching orcaflex_batch.read_Hs_T_dir
 for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     
     # don't bother with Python switch/case alternative
     # set wave direction according to (wave buoy) direction filtered value
     # for every dir (0=E, 1=S, 2=W, 3=N)
+    # if dir_Hs_T_n_tuple[0] == 0:
+    #     dir_sim = 90  
+    # elif dir_Hs_T_n_tuple[0] == 1:
+    #     dir_sim = 180
+    # elif dir_Hs_T_n_tuple[0] == 2:
+    #     dir_sim = 270
+    # elif dir_Hs_T_n_tuple[0] == 3:
+    #     dir_sim = 0
+    
+    # NB BELOW IS GOOD FOR MAGNETIC NORTH = 0 AND QUADRANTS AT CARDINALS
+    
+    
+    # let's try going at diagonals - delete if no good.
     if dir_Hs_T_n_tuple[0] == 0:
-        dir_sim = 90  
+        dir_sim = 45  
     elif dir_Hs_T_n_tuple[0] == 1:
-        dir_sim = 180
+        dir_sim = 135
     elif dir_Hs_T_n_tuple[0] == 2:
-        dir_sim = 270
+        dir_sim = 225
     elif dir_Hs_T_n_tuple[0] == 3:
-        dir_sim = 0
+        dir_sim = 315
     else:
         dir_sim = 0     # an error if not in cases! but default to 0 North
+        
+# try this - delete if no good        
         
     Hs_sim = dir_Hs_T_n_tuple[1]
     T_sim = dir_Hs_T_n_tuple[2]
@@ -382,8 +419,13 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     #PThies_stress_copper = np.divide(orcaflex_batch.x_bend_moment_history, (orcaflex_batch.CONDUCTOR_RADIUS / orcaflex_batch.I_second_moment_x_conductor))  # (M_moment_x/I_second_moment_x)*centreline_distance
     
     #PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.x_bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
-    # after removing current, where "x bend moment" became zero at the point (all points) when waves aliged,
+    
+    
+    # after removing current, where "x bend moment" became zero at the point (all points) when waves aligned,
     # change to using overall "bend moment"
+    
+    
+    
     PThies_stress_copper = np.multiply(np.divide(orcaflex_batch.bend_moment_history, orcaflex_batch.I_second_moment_x_conductor), conductor_y)  # (M_moment_x/I_second_moment_x)*centreline_distance
     
     
@@ -434,6 +476,14 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_pthies,  " together did total damage: ", scaled_damage_copper_pthies, "bringing running total P Thies damage to: ", damage_copper_pthies_total)
     print("Sea state with Hs: ",Hs_sim , " and period T: ", T_sim, " at direction: ",  dir_sim, " multiplied by occurrences n: ", n_sim, " doing individual damage", damage_copper_dbeier,  " together did total damage: ", scaled_damage_copper_dbeier, "bringing running total D Beier damage to: ", damage_copper_dbeier_total)
     
+    #save damage in appropriate cell (by Hs and Tp or Tm02/Tz) of appropriate matrix (by direction)
+    individual_damage_scatter_table_dbeier[dir_Hs_T_n_tuple[0]][math.ceil(Hs_sim)-1][math.ceil(T_sim)-1] = damage_copper_dbeier
+    scaled_damage_scatter_table_dbeier[dir_Hs_T_n_tuple[0]][math.ceil(Hs_sim)-1][math.ceil(T_sim)-1] = scaled_damage_copper_dbeier
+    individual_damage_scatter_table_pthies[dir_Hs_T_n_tuple[0]][math.ceil(Hs_sim)-1][math.ceil(T_sim)-1] = damage_copper_pthies
+    scaled_damage_scatter_table_pthies[dir_Hs_T_n_tuple[0]][math.ceil(Hs_sim)-1][math.ceil(T_sim)-1] = scaled_damage_copper_pthies    
+    # rows being saved 'lowest from the top' so will want to flip vertically before saving as file
+    
+    
     damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_pthies, scaled_damage_copper_pthies, damage_copper_pthies_total])
     damage_copper_export_pthies.append([Hs_sim, T_sim, dir_sim, n_sim, damage_copper_dbeier, scaled_damage_copper_dbeier, damage_copper_dbeier_total])
     
@@ -470,6 +520,45 @@ for  dir_Hs_T_n_tuple in dir_Hs_T_n:
 # print CSV of results
 #df_damage_copper_export_pthies = pd.DataFrame(damage_copper_export_pthies)
 #df_damage_copper_export_dbeier = pd.DataFrame(damage_copper_export_dbeier)
+
+# at end of all sims
+
+# error https://stackoverflow.com/q/4674473/11365317
+# for i in range(4):
+#     df_individual_damage_scatter_table_dbeier[i] = pd.DataFrame(np.flip(individual_damage_scatter_table_dbeier[i],0))
+#     df_scaled_damage_scatter_table_dbeier[i] = pd.DataFrame(np.flip(scaled_damage_scatter_table_dbeier[i],0))
+#     df_individual_damage_scatter_table_pthies[i] = pd.DataFrame(np.flip(individual_damage_scatter_table_pthies[i],0))
+#     df_scaled_damage_scatter_table_pthies[i] = pd.DataFrame(np.flip(scaled_damage_scatter_table_pthies[i],0))
+#     # rows were saved 'lowest from the top' so will want to flip vertically before saving as file
+    
+    
+#     df_individual_damage_scatter_table_dbeier[i].to_csv("df_individual_damage_scatter_table_dbeier" + str(i) + ".csv")
+#     df_scaled_damage_scatter_table_dbeier[i].to_csv("df_scaled_damage_scatter_table_dbeier" + str(i) + ".csv")
+#     df_individual_damage_scatter_table_pthies[i].to_csv("df_individual_damage_scatter_table_pthies" + str(i) + ".csv")
+#     df_scaled_damage_scatter_table_pthies[i].to_csv("df_scaled_damage_scatter_table_pthies" + str(i) + ".csv")
+    # save them
+
+# comment-out for the moment, as may be buggy
+
+
+pd.DataFrame(np.flip(individual_damage_scatter_table_dbeier[0],0)).to_csv("individual_damage_scatter_dbeier_0.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_dbeier[1],0)).to_csv("individual_damage_scatter_dbeier_1.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_dbeier[2],0)).to_csv("individual_damage_scatter_dbeier_2.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_dbeier[3],0)).to_csv("individual_damage_scatter_dbeier_3.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_dbeier[0],0)).to_csv("scaled_damage_scatter_0_dbeier.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_dbeier[1],0)).to_csv("scaled_damage_scatter_1_dbeier.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_dbeier[2],0)).to_csv("scaled_damage_scatter_2_dbeier.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_dbeier[3],0)).to_csv("scaled_damage_scatter_3_dbeier.csv")
+
+
+pd.DataFrame(np.flip(individual_damage_scatter_table_pthies[0],0)).to_csv("individual_damage_scatter_pthies_0.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_pthies[1],0)).to_csv("individual_damage_scatter_pthies_1.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_pthies[2],0)).to_csv("individual_damage_scatter_pthies_2.csv")
+pd.DataFrame(np.flip(individual_damage_scatter_table_pthies[3],0)).to_csv("individual_damage_scatter_pthies_3.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_pthies[0],0)).to_csv("scaled_damage_scatter_0_pthies.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_pthies[1],0)).to_csv("scaled_damage_scatter_1_pthies.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_pthies[2],0)).to_csv("scaled_damage_scatter_2_pthies.csv")
+pd.DataFrame(np.flip(scaled_damage_scatter_table_pthies[3],0)).to_csv("scaled_damage_scatter_3_pthies.csv")
 
 all_sims_finish_dateTime = datetime.now()
 
