@@ -10,8 +10,9 @@ y_label_string ='Along arc length (m)'
 y_maximum = 5
 
 % NB xlsread is supposed to be deprecated
-%[cable2, cable3, cable4]=xlsread("cable_simulation_results - Copy (2).csv")
-[cable2, cable3, cable4]=xlsread("cable_simulation_results.csv")
+[cable2, cable3, cable4]=xlsread("cable_simulation_results-temp.csv")
+%[cable2, cable3, cable4]=xlsread("cable_simulation_results.csv")
+%TEMPORARY CODING !!!!!! RESTORE ABOVE LINE !!!!!!
 numA = cell2mat(cable4(2:end,1:4))   % gives 4 numbers columns as columns (missing out header) from xls read
 % this is a non-JSON matrix of numbers
 

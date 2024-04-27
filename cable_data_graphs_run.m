@@ -2,6 +2,9 @@
 clear all
 close all
 
+% TAKE OUT TEMP!!!
+
+% TODO All the below would be better read in from a config file
 
 input_column_number = 5
 input_title_string = 'Lateral displacement (y) along cable arc length'
