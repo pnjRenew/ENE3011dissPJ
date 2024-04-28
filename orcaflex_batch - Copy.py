@@ -1,11 +1,3 @@
-'''
-orcaflex_batch.py
-Peter Jenkin 2024
-A library to make an object to help with OrcaFlex API batch processing 
-for fatigue damage estimates.
-'''
-
-
 import OrcFxAPI
 from datetime import datetime
 import random
@@ -20,6 +12,7 @@ import matplotlib.pyplot as plt
 import rawdatx.read_TOA5 as read_raw_data
 import rawdatx.process_XML as process_XML
 import xlsxwriter
+#import spurioussadgjhasgdjasgd
 
 class OrcaFlexBatch:
     
@@ -34,8 +27,9 @@ class OrcaFlexBatch:
         self.FATIGUE_LIMIT_STEEL = 600e6      # 600 MPa fatigue limit for steel
         
         self.CONDUCTOR_RADIUS = 0.00725  # from a 14.5mm conductor (150mm^2)
+        #self.ARMOUR_RADIUS = 0.0545      # 109.6mm overall outside diameter (150mm^2)
         self.ARMOUR_RADIUS = 0.01825      # screen diameter 36.5 (150mm^2)
-        # TODO: check - might want to change name to SCREEN_RADIUS?
+# TODO: check - might want to change name to SCREEN_RADIUS?
         
         self.CONDUCTOR_AREA = 3492.6e-6     # A1 from Beier et al 2023 2.2.2 and (Nexans 2019 4.5.4)
         self.ARMOUR_AREA = 1024.9e-6         # A2
@@ -68,16 +62,19 @@ class OrcaFlexBatch:
     
     
     def Kt2(self, A1,A2,E1,E2):
+        #return 1/((A1*(E2/E1)) + A2)
         Kt2 = 1/((A1*(E2/E1)) + A2)
         return Kt2
 
     #def Kc1(self, Y1, Cmax):
     def Kc1(self, Y1):
+        #Kc1 = Y1/Cmax
         Kc1 = Y1 / self.CABLE_MINIMUM_BENDING_RADIUS
         return Kc1
     
     #def Kc2(self, Y2, Cmax):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
     def Kc2(self, Y2):    # could combine with Kc1, but Kt1 and Kt2 are currently separate also
+        #Kc2 = Y2/Cmax
         Kc2 = Y2 / self.CABLE_MINIMUM_BENDING_RADIUS
         return Kc2
     
@@ -85,16 +82,19 @@ class OrcaFlexBatch:
 
     def set_regular_wave(self, model, wave_period: float, wave_height: float, wave_direction: float):
         environment = model.environment
-        for wave_name in environment.WaveName:
+    #dir 90°, 1.5m H, period T = 5s
+        for wave_name in environment.WaveName:      # was doing thisoriginally to modify existing setup - TO CHANGE?
             print ("Name: " + str(wave_name))
+            #environment.SelectedWaveTrain = wave_name
             environment.SelectedWave = wave_name
-            environment.WaveDirection = wave_direction  
+            environment.WaveDirection = wave_direction  # pj:0
             self.wave_direction = int(environment.WaveDirection)
             print ("Direction: " + str(environment.WaveDirection))
-            environment.WavePeriod = wave_period    
+            #print ("Length: " + str(environment.WaveLength) + '\n')            
+            environment.WavePeriod = wave_period    # pj:9
             self.wave_period = environment.WavePeriod
             print ("Period: " + str(self.wave_period))
-            environment.WaveHeight = wave_height  
+            environment.WaveHeight = wave_height  # pj:5
             self.wave_height = environment.WaveHeight  # m
             print ("Height: " + str(self.wave_height))
             self.wave_type = "regular"
@@ -104,14 +104,16 @@ class OrcaFlexBatch:
     def set_jonswap_wave(self, model, wave_period: float, wave_hs: float, wave_direction: float):
         environment = model.environment
     #dir 90°, 1.5m H, period T = 5s
-        for wave_name in environment.WaveName:
+        for wave_name in environment.WaveName:      # was doing thisoriginally to modify existing setup - TO CHANGE?
             print ("Name: " + str(wave_name))
+            #environment.SelectedWaveTrain = wave_name
             environment.SelectedWave = wave_name
             environment.WaveDirection = wave_direction  # pj:0
             self.wave_direction = int(environment.WaveDirection)
             print ("Direction: " + str(environment.WaveDirection))
+            #print ("Length: " + str(environment.WaveLength) + '\n')
             environment.WaveType = "JONSWAP"
-            environment.WaveHs = wave_hs
+            environment.WaveHs = wave_hs  # pj:5
             self.wave_hs = environment.WaveHeight  # m
             print ("Hs: " + str(self.wave_hs))
             # environment.WaveTp = wave_period # this line if setting Tp
@@ -153,15 +155,14 @@ class OrcaFlexBatch:
         rainflow_count_material = ffpack.lcc.astmRainflowCounting(stress_time_series)
         print("rainflow_count_material ", str(rainflow_count_material))
     
+        # minerDamageModelClassic(lccData, snData, fatigueLimit)     fatigueLimit 100?
         
         # need to filter out (list comprehension) any range == 0 from [range count] from astmRainFlowCounting       
         rainflow_count_material_filtered = [rfc for rfc in rainflow_count_material if rfc[0] > 0]
         # ... but this may leave len(np.array(rainflow_count_material_filtered).shape) as 1 (not 2), causing an error
         # so catch any ValueError and set this damage to zero
         try:
-            mp_damage = ffpack.fdm.minerDamageModelClassic(
-                rainflow_count_material_filtered, material_sn, material_fatigue_limit)
-            # Miner-Palmgren (mp) need to multiply by MPa (e6)
+            mp_damage = ffpack.fdm.minerDamageModelClassic(rainflow_count_material_filtered, material_sn, material_fatigue_limit)    # Miner-Palmgren (mp) need to multiply by MPa (e6)
         except ValueError as e:
             print(str(e))   # print error message anyhow
             mp_damage = 0   # ... and set damage to zero (may well be)
@@ -175,6 +176,7 @@ class OrcaFlexBatch:
         process_XML.main(rawdatx_config)    # make Excel file (do we want this?)
         
     def read_Hs_T(self):
+        # df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02-and-fp-and-date-2016.csv")  # read Hs and T to a dataframe
         df = pd.read_csv(r"../../../diss-data/Race-Bank/2017-Race-Bank.csv")  # read Hs and T to a dataframe
 
         # reading entire Hs:T for all directions (unfiltered)
@@ -182,33 +184,36 @@ class OrcaFlexBatch:
         return df
 
     def read_Hs_T_dir(self):
+        # df = pd.read_csv(r"../../../diss-data/Hs_T/Hm0-and-Tm02-and-fp-and-date-2016.csv")  # read Hs and T to a dataframe
         df = pd.read_csv(r"../../../diss-data/Race-Bank/2017-Race-Bank.csv")  # read Hs and T to a dataframe
         
         
         dir_Hs_T_filtered = [None] * 4      # set up the list to be populated by direction filtered Hs:T
+        # dir_Hs_T_filtered[0] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
+        # dir_Hs_T_filtered[1] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
+        # dir_Hs_T_filtered[2] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
+        # dir_Hs_T_filtered[3] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+
 # NB THE BELOW IS 'CORRECT' FOR MAGNETIC NORTH = 0°
 
-        # dir_Hs_T_filtered[0] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  
-        # between NW and NE (i.e. N
-        # dir_Hs_T_filtered[1] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  
-        # between NE and SE (i.e. E)
-        # dir_Hs_T_filtered[2] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  
-        # between SE and SW (i.e. S)
-        # dir_Hs_T_filtered[3] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  
-        # between SW and NW (i.e. W)
+        # dir_Hs_T_filtered[0] = df.loc[ (45 >= df['mdir']) |  (df['mdir']  > 315)]  # between NW and NE (i.e. N
+        # dir_Hs_T_filtered[1] = df.loc[ (135 >= df['mdir']) &  (df['mdir'] > 45)]  # between NE and SE (i.e. E)
+        # dir_Hs_T_filtered[2] = df.loc[ (225 >= df['mdir']) &  (df['mdir']  > 135)]  # between SE and SW (i.e. S)
+        # dir_Hs_T_filtered[3] = df.loc[ (315 >= df['mdir']) &  (df['mdir']  > 225)]  # between SW and NW (i.e. W)
+
 
 # 3et's try going for diagonals 18-4-24
 
-        dir_Hs_T_filtered[0] = df.loc[ (90 >= df['mdir']) &  (df['mdir']  > 0)]  
-        # between N and E (i.e. NE)
-        dir_Hs_T_filtered[1] = df.loc[ (180 >= df['mdir']) &  (df['mdir'] > 90)]  
-        # between E and S (i.e. SE)
-        dir_Hs_T_filtered[2] = df.loc[ (270 >= df['mdir']) &  (df['mdir']  > 180)]  
-        # between S and W (i.e. SW)
-        dir_Hs_T_filtered[3] = df.loc[ (360 >= df['mdir']) &  (df['mdir']  > 270)]  
-        # between N and W (i.e. NW)
+        dir_Hs_T_filtered[0] = df.loc[ (90 >= df['mdir']) &  (df['mdir']  > 0)]  # between N and E (i.e. NE)
+        dir_Hs_T_filtered[1] = df.loc[ (180 >= df['mdir']) &  (df['mdir'] > 90)]  # between E and S (i.e. SE)
+        dir_Hs_T_filtered[2] = df.loc[ (270 >= df['mdir']) &  (df['mdir']  > 180)]  # between S and W (i.e. SW)
+        dir_Hs_T_filtered[3] = df.loc[ (360 >= df['mdir']) &  (df['mdir']  > 270)]  # between N and W (i.e. NW)
+# delete this if no good!
 
         
-        # also read direction, and return array of dataframes binned by direction        
+        # also read direction, and return array of dataframes binned by direction
+        
         return dir_Hs_T_filtered    
+    #def Hs_T_histogram(self,hs_t_array):
+        #plt.hist2d()
         
